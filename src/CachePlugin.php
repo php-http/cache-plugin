@@ -174,7 +174,7 @@ final class CachePlugin implements Plugin
                 return $maxAge - ((int) $age);
             }
 
-            return $maxAge;
+            return (int) $maxAge;
         }
 
         // check for ttl in the Expires header
