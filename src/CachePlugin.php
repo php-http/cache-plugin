@@ -37,7 +37,7 @@ final class CachePlugin implements Plugin
      * @param StreamFactory          $streamFactory
      * @param array                  $config        {
      *
-     *     @var bool $respect_cache_headers Whether to look at the cache directives or ignore them.
+     *     @var bool $respect_cache_headers Whether to look at the cache directives or ignore them
      *     @var int $default_ttl If we do not respect cache headers or can't calculate a good ttl, use this value.
      * }
      */
@@ -123,7 +123,7 @@ final class CachePlugin implements Plugin
      * @param ResponseInterface $response
      * @param string            $name     The field of Cache-Control to fetch
      *
-     * @return bool|string The value of the directive, true if directive without value, false if directive not present.
+     * @return bool|string The value of the directive, true if directive without value, false if directive not present
      */
     private function getCacheControlDirective(ResponseInterface $response, $name)
     {
