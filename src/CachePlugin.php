@@ -95,6 +95,11 @@ final class CachePlugin implements Plugin
 
         return $next($request)->then(function (ResponseInterface $response) use ($cacheItem) {
             if (304 === $response->getStatusCode()) {
+                if (!$cacheItem->isHit()) {
+                    // We do not have the item in cache. We can return the cached response.
+                    return $response;
+                }
+
                 // The cached response we have is still valid
                 $data = $cacheItem->get();
                 $data['expiresAt'] = time() + $this->getMaxAge($response);
