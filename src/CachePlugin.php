@@ -265,7 +265,7 @@ final class CachePlugin implements Plugin
     {
         $data = $cacheItem->get();
         if (!isset($data['createdAt'])) {
-            return null;
+            return;
         }
 
         return $data['createdAt'];
@@ -282,17 +282,17 @@ final class CachePlugin implements Plugin
     {
         $data = $cacheItem->get();
         if (!isset($data['etag'])) {
-            return null;
+            return;
         }
 
         if (is_array($data['etag'])) {
-            foreach($data['etag'] as $etag) {
+            foreach ($data['etag'] as $etag) {
                 if (!empty($etag)) {
                     return $etag;
                 }
             }
 
-            return null;
+            return;
         }
 
         return $data['etag'];
