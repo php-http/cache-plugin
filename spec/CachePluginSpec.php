@@ -15,7 +15,7 @@ class CachePluginSpec extends ObjectBehavior
 {
     function let(CacheItemPoolInterface $pool, StreamFactory $streamFactory)
     {
-        $this->beConstructedWith($pool, $streamFactory, ['default_ttl'=>60]);
+        $this->beConstructedWith($pool, $streamFactory, ['default_ttl'=>60, 'cache_lifetime'=>1000]);
     }
 
     function it_is_initializable(CacheItemPoolInterface $pool)
@@ -41,11 +41,12 @@ class CachePluginSpec extends ObjectBehavior
         $response->getBody()->willReturn($stream);
         $response->getHeader('Cache-Control')->willReturn(array());
         $response->getHeader('Expires')->willReturn(array());
+        $response->getHeader('ETag')->willReturn(array());
 
         $pool->getItem('d20f64acc6e70b6079845f2fe357732929550ae1')->shouldBeCalled()->willReturn($item);
         $item->isHit()->willReturn(false);
-        $item->set(['response' => $response, 'body' => $httpBody])->willReturn($item)->shouldBeCalled();
-        $item->expiresAfter(60)->willReturn($item)->shouldBeCalled();
+        $item->set()->willReturn($item)->shouldBeCalled();
+        $item->expiresAfter(1060)->willReturn($item)->shouldBeCalled();
         $pool->save($item)->shouldBeCalled();
 
         $next = function (RequestInterface $request) use ($response) {
@@ -53,6 +54,12 @@ class CachePluginSpec extends ObjectBehavior
         };
 
         $this->handleRequest($request, $next, function () {});
+        $item->get()->shouldHaveKeyWithValue('response', $response);
+        $item->get()->shouldHaveKeyWithValue('body', $httpBody);
+        $item->get()->shouldHaveKey('expiresAt');
+        $item->get()->shouldHaveKey('createdAt');
+        $item->get()->shouldHaveKey('etag');
+
     }
 
     function it_doesnt_store_failed_responses(CacheItemPoolInterface $pool, CacheItemInterface $item, RequestInterface $request, ResponseInterface $response)
