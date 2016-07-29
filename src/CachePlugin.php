@@ -98,7 +98,7 @@ final class CachePlugin implements Plugin
                 // The cached response we have is still valid
                 $data = $cacheItem->get();
                 $data['expiresAt'] = time() + $this->getMaxAge($response);
-                $cacheItem->set($data)->expiresAfter($this->config['cache_lifetime']);
+                $cacheItem->set($data)->expiresAfter($this->config['cache_lifetime'] + $data['expiresAt']);
                 $this->pool->save($cacheItem);
 
                 return $this->createResponseFromCacheItem($cacheItem);
@@ -113,12 +113,13 @@ final class CachePlugin implements Plugin
                     $response = $response->withBody($this->streamFactory->createStream($body));
                 }
 
+                $expiresAt = time() + $this->getMaxAge($response);
                 $cacheItem
-                    ->expiresAfter($this->config['cache_lifetime'])
+                    ->expiresAfter($this->config['cache_lifetime'] + $expiresAt)
                     ->set([
                     'response' => $response,
                     'body' => $body,
-                    'expiresAt' => time() + $this->getMaxAge($response),
+                    'expiresAt' => $expiresAt,
                     'createdAt' => time(),
                     'etag' => $response->getHeader('ETag'),
                 ]);
@@ -265,7 +266,7 @@ final class CachePlugin implements Plugin
     {
         $data = $cacheItem->get();
         if (!isset($data['createdAt'])) {
-            return null;
+            return;
         }
 
         return $data['createdAt'];
@@ -282,17 +283,17 @@ final class CachePlugin implements Plugin
     {
         $data = $cacheItem->get();
         if (!isset($data['etag'])) {
-            return null;
+            return;
         }
 
         if (is_array($data['etag'])) {
-            foreach($data['etag'] as $etag) {
+            foreach ($data['etag'] as $etag) {
                 if (!empty($etag)) {
                     return $etag;
                 }
             }
 
-            return null;
+            return;
         }
 
         return $data['etag'];
