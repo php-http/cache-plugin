@@ -5,6 +5,7 @@ namespace Http\Client\Common\Plugin;
 use Http\Client\Common\Plugin;
 use Http\Message\StreamFactory;
 use Http\Promise\FulfilledPromise;
+use Psr\Cache\CacheItemInterface;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -57,7 +58,6 @@ final class CachePlugin implements Plugin
     public function handleRequest(RequestInterface $request, callable $next, callable $first)
     {
         $method = strtoupper($request->getMethod());
-
         // if the request not is cachable, move to $next
         if ($method !== 'GET' && $method !== 'HEAD') {
             return $next($request);
@@ -68,15 +68,42 @@ final class CachePlugin implements Plugin
         $cacheItem = $this->pool->getItem($key);
 
         if ($cacheItem->isHit()) {
-            // return cached response
             $data = $cacheItem->get();
-            $response = $data['response'];
-            $response = $response->withBody($this->streamFactory->createStream($data['body']));
+            if (isset($data['expiresAt']) && time() > $data['expiresAt']) {
+                // This item is still valid according to previous cache headers
+                return new FulfilledPromise($this->createResponseFromCacheItem($cacheItem));
+            }
 
-            return new FulfilledPromise($response);
+            // Add headers to ask the server if this cache is still valid
+            if ($modifiedAt = $this->getModifiedAt($cacheItem)) {
+                $modifiedAt = new \DateTime('@'.$modifiedAt);
+                $modifiedAt->setTimezone(new \DateTimeZone('GMT'));
+                $request = $request->withHeader(
+                    'If-Modified-Since',
+                    sprintf('%s GMT', $modifiedAt->format('l, d-M-y H:i:s'))
+                );
+            }
+
+            if ($etag = $this->getETag($cacheItem)) {
+                $request = $request->withHeader(
+                    'If-None-Match',
+                    $etag
+                );
+            }
         }
 
+
         return $next($request)->then(function (ResponseInterface $response) use ($cacheItem) {
+            if (304 === $response->getStatusCode()) {
+                // The cached response we have is still valid
+                $data = $cacheItem->get();
+                $data['expiresAt'] = time() + $this->getMaxAge($response);
+                $cacheItem->set($data)->expiresAfter($this->config['cache_lifetime']);
+                $this->pool->save($cacheItem);
+
+                return $this->createResponseFromCacheItem($cacheItem);
+            }
+
             if ($this->isCacheable($response)) {
                 $bodyStream = $response->getBody();
                 $body = $bodyStream->__toString();
@@ -86,8 +113,15 @@ final class CachePlugin implements Plugin
                     $response = $response->withBody($this->streamFactory->createStream($body));
                 }
 
-                $cacheItem->set(['response' => $response, 'body' => $body])
-                    ->expiresAfter($this->getMaxAge($response));
+                $cacheItem
+                    ->expiresAfter($this->config['cache_lifetime'])
+                    ->set([
+                    'response' => $response,
+                    'body' => $body,
+                    'expiresAt' => time() + $this->getMaxAge($response),
+                    'createdAt' => time(),
+                    'etag' => $response->getHeader('ETag'),
+                ]);
                 $this->pool->save($cacheItem);
             }
 
@@ -194,11 +228,73 @@ final class CachePlugin implements Plugin
     private function configureOptions(OptionsResolver $resolver)
     {
         $resolver->setDefaults([
+            'cache_lifetime' => 2592000, // 30 days
             'default_ttl' => null,
             'respect_cache_headers' => true,
         ]);
 
+        $resolver->setAllowedTypes('cache_lifetime', 'int');
         $resolver->setAllowedTypes('default_ttl', ['int', 'null']);
         $resolver->setAllowedTypes('respect_cache_headers', 'bool');
+    }
+
+    /**
+     * @param CacheItemInterface $cacheItem
+     *
+     * @return ResponseInterface
+     */
+    private function createResponseFromCacheItem(CacheItemInterface $cacheItem)
+    {
+        $data = $cacheItem->get();
+
+        /** @var ResponseInterface $response */
+        $response = $data['response'];
+        $response = $response->withBody($this->streamFactory->createStream($data['body']));
+
+        return $response;
+    }
+
+    /**
+     * Get the timestamp when the cached response was stored.
+     *
+     * @param CacheItemInterface $cacheItem
+     *
+     * @return int|null
+     */
+    private function getModifiedAt(CacheItemInterface $cacheItem)
+    {
+        $data = $cacheItem->get();
+        if (!isset($data['createdAt'])) {
+            return null;
+        }
+
+        return $data['createdAt'];
+    }
+
+    /**
+     * Get the ETag from the cached response.
+     *
+     * @param CacheItemInterface $cacheItem
+     *
+     * @return string|null
+     */
+    private function getETag(CacheItemInterface $cacheItem)
+    {
+        $data = $cacheItem->get();
+        if (!isset($data['etag'])) {
+            return null;
+        }
+
+        if (is_array($data['etag'])) {
+            foreach($data['etag'] as $etag) {
+                if (!empty($etag)) {
+                    return $etag;
+                }
+            }
+
+            return null;
+        }
+
+        return $data['etag'];
     }
 }
