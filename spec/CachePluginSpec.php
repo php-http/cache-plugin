@@ -2,6 +2,8 @@
 
 namespace spec\Http\Client\Common\Plugin;
 
+use Prophecy\Argument;
+use Prophecy\Comparator\Factory as ComparatorFactory;
 use Http\Message\StreamFactory;
 use Http\Promise\FulfilledPromise;
 use PhpSpec\ObjectBehavior;
@@ -39,27 +41,28 @@ class CachePluginSpec extends ObjectBehavior
         $request->getUri()->willReturn('/');
         $response->getStatusCode()->willReturn(200);
         $response->getBody()->willReturn($stream);
-        $response->getHeader('Cache-Control')->willReturn(array());
-        $response->getHeader('Expires')->willReturn(array());
-        $response->getHeader('ETag')->willReturn(array());
+        $response->getHeader('Cache-Control')->willReturn(array())->shouldBeCalled();
+        $response->getHeader('Expires')->willReturn(array())->shouldBeCalled();
+        $response->getHeader('ETag')->willReturn(array())->shouldBeCalled();
 
         $pool->getItem('e3b717d5883a45ef9493d009741f7c64')->shouldBeCalled()->willReturn($item);
         $item->isHit()->willReturn(false);
-        $item->set()->willReturn($item)->shouldBeCalled();
         $item->expiresAfter(1060)->willReturn($item)->shouldBeCalled();
-        $pool->save($item)->shouldBeCalled();
+
+        $item->set(Argument::that($this->getCacheItemMatcher([
+            'response' => $response->getWrappedObject(),
+            'body' => $httpBody,
+            'expiresAt' => 0,
+            'createdAt' => 0,
+            'etag' => []
+        ])))->willReturn($item)->shouldBeCalled();
+        $pool->save(Argument::any())->shouldBeCalled();
 
         $next = function (RequestInterface $request) use ($response) {
             return new FulfilledPromise($response->getWrappedObject());
         };
 
         $this->handleRequest($request, $next, function () {});
-        $item->get()->shouldHaveKeyWithValue('response', $response);
-        $item->get()->shouldHaveKeyWithValue('body', $httpBody);
-        $item->get()->shouldHaveKey('expiresAt');
-        $item->get()->shouldHaveKey('createdAt');
-        $item->get()->shouldHaveKey('etag');
-
     }
 
     function it_doesnt_store_failed_responses(CacheItemPoolInterface $pool, CacheItemInterface $item, RequestInterface $request, ResponseInterface $response)
@@ -107,13 +110,20 @@ class CachePluginSpec extends ObjectBehavior
         $response->getHeader('Cache-Control')->willReturn(array('max-age=40'));
         $response->getHeader('Age')->willReturn(array('15'));
         $response->getHeader('Expires')->willReturn(array());
+        $response->getHeader('ETag')->willReturn(array());
 
         $pool->getItem('e3b717d5883a45ef9493d009741f7c64')->shouldBeCalled()->willReturn($item);
         $item->isHit()->willReturn(false);
 
-        // 40-15 should be 25
-        $item->set(['response' => $response, 'body' => $httpBody])->willReturn($item)->shouldBeCalled();
-        $item->expiresAfter(25)->willReturn($item)->shouldBeCalled();
+        $item->set(Argument::that($this->getCacheItemMatcher([
+                'response' => $response->getWrappedObject(),
+                'body' => $httpBody,
+                'expiresAt' => 0,
+                'createdAt' => 0,
+                'etag' => []
+            ])))->willReturn($item)->shouldBeCalled();
+        // 40-15 should be 25 + the default 1000
+        $item->expiresAfter(1025)->willReturn($item)->shouldBeCalled();
         $pool->save($item)->shouldBeCalled();
 
         $next = function (RequestInterface $request) use ($response) {
@@ -121,5 +131,26 @@ class CachePluginSpec extends ObjectBehavior
         };
 
         $this->handleRequest($request, $next, function () {});
+    }
+
+    private function getCacheItemMatcher(array $expectedData)
+    {
+        return function(array $actualData) use ($expectedData) {
+            foreach ($expectedData as $key => $value) {
+                if (!isset($actualData[$key])) {
+                    return false;
+                }
+
+                if ($key === 'expiresAt' || $key === 'createdAt') {
+                    // We do not need to validate the value of these fields.
+                    continue;
+                }
+
+                if ($actualData[$key] !== $value) {
+                    return false;
+                }
+            }
+            return true;
+        };
     }
 }
