@@ -76,23 +76,16 @@ final class CachePlugin implements Plugin
             }
 
             // Add headers to ask the server if this cache is still valid
-            if ($modifiedAt = $this->getModifiedAt($cacheItem)) {
-                $modifiedAt = new \DateTime('@'.$modifiedAt);
-                $modifiedAt->setTimezone(new \DateTimeZone('GMT'));
-                $request = $request->withHeader(
-                    'If-Modified-Since',
-                    sprintf('%s GMT', $modifiedAt->format('l, d-M-y H:i:s'))
-                );
+            if ($mod = $this->getModifiedAt($cacheItem)) {
+                $mod = new \DateTime('@'.$mod);
+                $mod->setTimezone(new \DateTimeZone('GMT'));
+                $request = $request->withHeader('If-Modified-Since', sprintf('%s GMT', $mod->format('l, d-M-y H:i:s')));
             }
 
             if ($etag = $this->getETag($cacheItem)) {
-                $request = $request->withHeader(
-                    'If-None-Match',
-                    $etag
-                );
+                $request = $request->withHeader('If-None-Match', $etag);
             }
         }
-
 
         return $next($request)->then(function (ResponseInterface $response) use ($cacheItem) {
             if (304 === $response->getStatusCode()) {
