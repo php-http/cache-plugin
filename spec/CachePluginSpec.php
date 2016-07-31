@@ -49,13 +49,13 @@ class CachePluginSpec extends ObjectBehavior
         $item->isHit()->willReturn(false);
         $item->expiresAfter(1060)->willReturn($item)->shouldBeCalled();
 
-        $item->set(Argument::that($this->getCacheItemMatcher([
+        $item->set($this->getCacheItemMatcher([
             'response' => $response->getWrappedObject(),
             'body' => $httpBody,
             'expiresAt' => 0,
             'createdAt' => 0,
             'etag' => []
-        ])))->willReturn($item)->shouldBeCalled();
+        ]))->willReturn($item)->shouldBeCalled();
         $pool->save(Argument::any())->shouldBeCalled();
 
         $next = function (RequestInterface $request) use ($response) {
@@ -115,13 +115,13 @@ class CachePluginSpec extends ObjectBehavior
         $pool->getItem('d20f64acc6e70b6079845f2fe357732929550ae1')->shouldBeCalled()->willReturn($item);
         $item->isHit()->willReturn(false);
 
-        $item->set(Argument::that($this->getCacheItemMatcher([
+        $item->set($this->getCacheItemMatcher([
                 'response' => $response->getWrappedObject(),
                 'body' => $httpBody,
                 'expiresAt' => 0,
                 'createdAt' => 0,
                 'etag' => []
-            ])))->willReturn($item)->shouldBeCalled();
+            ]))->willReturn($item)->shouldBeCalled();
         // 40-15 should be 25 + the default 1000
         $item->expiresAfter(1025)->willReturn($item)->shouldBeCalled();
         $pool->save($item)->shouldBeCalled();
@@ -133,9 +133,17 @@ class CachePluginSpec extends ObjectBehavior
         $this->handleRequest($request, $next, function () {});
     }
 
+
+    /**
+     * Private function to match requests
+     *
+     * @param array $expectedData
+     *
+     * @return \Closure
+     */
     private function getCacheItemMatcher(array $expectedData)
     {
-        return function(array $actualData) use ($expectedData) {
+        return Argument::that(function(array $actualData) use ($expectedData) {
             foreach ($expectedData as $key => $value) {
                 if (!isset($actualData[$key])) {
                     return false;
@@ -151,6 +159,6 @@ class CachePluginSpec extends ObjectBehavior
                 }
             }
             return true;
-        };
+        });
     }
 }
