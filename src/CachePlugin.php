@@ -70,7 +70,7 @@ final class CachePlugin implements Plugin
 
         if ($cacheItem->isHit()) {
             $data = $cacheItem->get();
-            if (isset($data['expiresAt']) && time() > $data['expiresAt']) {
+            if (isset($data['expiresAt']) && time() < $data['expiresAt']) {
                 // This item is still valid according to previous cache headers
                 return new FulfilledPromise($this->createResponseFromCacheItem($cacheItem));
             }

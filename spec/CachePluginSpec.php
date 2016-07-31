@@ -3,7 +3,6 @@
 namespace spec\Http\Client\Common\Plugin;
 
 use Prophecy\Argument;
-use Prophecy\Comparator\Factory as ComparatorFactory;
 use Http\Message\StreamFactory;
 use Http\Promise\FulfilledPromise;
 use PhpSpec\ObjectBehavior;
@@ -133,9 +132,147 @@ class CachePluginSpec extends ObjectBehavior
         $this->handleRequest($request, $next, function () {});
     }
 
+    function it_saves_etag(CacheItemPoolInterface $pool, CacheItemInterface $item, RequestInterface $request, ResponseInterface $response, StreamInterface $stream)
+    {
+        $httpBody = 'body';
+        $stream->__toString()->willReturn($httpBody);
+        $stream->isSeekable()->willReturn(true);
+        $stream->rewind()->shouldBeCalled();
+
+        $request->getMethod()->willReturn('GET');
+        $request->getUri()->willReturn('/');
+        $response->getStatusCode()->willReturn(200);
+        $response->getBody()->willReturn($stream);
+        $response->getHeader('Cache-Control')->willReturn(array());
+        $response->getHeader('Expires')->willReturn(array());
+        $response->getHeader('ETag')->willReturn(array('foo_etag'));
+
+        $pool->getItem('e3b717d5883a45ef9493d009741f7c64')->shouldBeCalled()->willReturn($item);
+        $item->isHit()->willReturn(false);
+        $item->expiresAfter(1060)->willReturn($item);
+
+        $item->set($this->getCacheItemMatcher([
+            'response' => $response->getWrappedObject(),
+            'body' => $httpBody,
+            'expiresAt' => 0,
+            'createdAt' => 0,
+            'etag' => ['foo_etag']
+        ]))->willReturn($item)->shouldBeCalled();
+        $pool->save(Argument::any())->shouldBeCalled();
+
+        $next = function (RequestInterface $request) use ($response) {
+            return new FulfilledPromise($response->getWrappedObject());
+        };
+
+        $this->handleRequest($request, $next, function () {});
+    }
+
+    function it_adds_etag_and_modfied_since_to_request(CacheItemPoolInterface $pool, CacheItemInterface $item, RequestInterface $request, ResponseInterface $response, StreamInterface $stream)
+    {
+        $httpBody = 'body';
+
+        $request->getMethod()->willReturn('GET');
+        $request->getUri()->willReturn('/');
+
+        $request->withHeader('If-Modified-Since', 'Thursday, 01-Jan-70 01:18:31 GMT')->shouldBeCalled()->willReturn($request);
+        $request->withHeader('If-None-Match', 'foo_etag')->shouldBeCalled()->willReturn($request);
+
+        $response->getStatusCode()->willReturn(304);
+
+        $pool->getItem('e3b717d5883a45ef9493d009741f7c64')->shouldBeCalled()->willReturn($item);
+        $item->isHit()->willReturn(true, false);
+        $item->get()->willReturn([
+            'response' => $response,
+            'body' => $httpBody,
+            'expiresAt' => 0,
+            'createdAt' => 4711,
+            'etag' => ['foo_etag']
+        ])->shouldBeCalled();
+
+        $next = function (RequestInterface $request) use ($response) {
+            return new FulfilledPromise($response->getWrappedObject());
+        };
+
+        $this->handleRequest($request, $next, function () {});
+    }
+
+    function it_servces_a_cached_response(CacheItemPoolInterface $pool, CacheItemInterface $item, RequestInterface $request, ResponseInterface $response, StreamInterface $stream, StreamFactory $streamFactory)
+    {
+        $httpBody = 'body';
+
+        $request->getMethod()->willReturn('GET');
+        $request->getUri()->willReturn('/');
+
+        $pool->getItem('e3b717d5883a45ef9493d009741f7c64')->shouldBeCalled()->willReturn($item);
+        $item->isHit()->willReturn(true);
+        $item->get()->willReturn([
+            'response' => $response,
+            'body' => $httpBody,
+            'expiresAt' => time()+1000000, //It is in the future
+            'createdAt' => 4711,
+            'etag' => []
+        ])->shouldBeCalled();
+
+        // Make sure we add back the body
+        $response->withBody($stream)->willReturn($response)->shouldBeCalled();
+        $streamFactory->createStream($httpBody)->shouldBeCalled()->willReturn($stream);
+
+        $next = function (RequestInterface $request) use ($response) {
+            return new FulfilledPromise($response->getWrappedObject());
+        };
+
+        $this->handleRequest($request, $next, function () {});
+    }
+
+    function it_serves_and_resaved_expired_response(CacheItemPoolInterface $pool, CacheItemInterface $item, RequestInterface $request, ResponseInterface $response, StreamInterface $stream, StreamFactory $streamFactory)
+    {
+        $httpBody = 'body';
+
+        $request->getMethod()->willReturn('GET');
+        $request->getUri()->willReturn('/');
+
+        $request->withHeader(Argument::any(), Argument::any())->willReturn($request);
+        $request->withHeader(Argument::any(), Argument::any())->willReturn($request);
+
+        $response->getStatusCode()->willReturn(304);
+        $response->getHeader('Cache-Control')->willReturn(array());
+        $response->getHeader('Expires')->willReturn(array())->shouldBeCalled();
+
+        // Make sure we add back the body
+        $response->withBody($stream)->willReturn($response)->shouldBeCalled();
+
+        $pool->getItem('e3b717d5883a45ef9493d009741f7c64')->shouldBeCalled()->willReturn($item);
+        $item->isHit()->willReturn(true, true);
+        $item->expiresAfter(1060)->willReturn($item)->shouldBeCalled();
+        $item->get()->willReturn([
+            'response' => $response,
+            'body' => $httpBody,
+            'expiresAt' => 0,
+            'createdAt' => 4711,
+            'etag' => ['foo_etag']
+        ])->shouldBeCalled();
+
+        $item->set($this->getCacheItemMatcher([
+            'response' => $response->getWrappedObject(),
+            'body' => $httpBody,
+            'expiresAt' => 0,
+            'createdAt' => 0,
+            'etag' => ['foo_etag']
+        ]))->willReturn($item)->shouldBeCalled();
+        $pool->save(Argument::any())->shouldBeCalled();
+
+        $streamFactory->createStream($httpBody)->shouldBeCalled()->willReturn($stream);
+
+        $next = function (RequestInterface $request) use ($response) {
+            return new FulfilledPromise($response->getWrappedObject());
+        };
+
+        $this->handleRequest($request, $next, function () {});
+    }
+
 
     /**
-     * Private function to match requests
+     * Private function to match cache item data.
      *
      * @param array $expectedData
      *
