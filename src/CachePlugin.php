@@ -38,7 +38,7 @@ final class CachePlugin implements Plugin
      * @param array                  $config        {
      *
      *     @var bool $respect_cache_headers Whether to look at the cache directives or ignore them
-     *     @var int $default_ttl If we do not respect cache headers or can't calculate a good ttl, use this value.
+     *     @var int $default_ttl If we do not respect cache headers or can't calculate a good ttl, use this value
      *     @var string $hash_algo The hashing algorithm to use when generating cache keys.
      * }
      */
