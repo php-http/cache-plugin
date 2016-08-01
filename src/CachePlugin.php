@@ -163,7 +163,7 @@ final class CachePlugin implements Plugin
     private function getMaxAge(ResponseInterface $response)
     {
         if (!$this->config['respect_cache_headers']) {
-            return $this->config['default_ttl'];
+            return (int) $this->config['default_ttl'];
         }
 
         // check for max age in the Cache-Control header
@@ -171,7 +171,7 @@ final class CachePlugin implements Plugin
         if (!is_bool($maxAge)) {
             $ageHeaders = $response->getHeader('Age');
             foreach ($ageHeaders as $age) {
-                return $maxAge - ((int) $age);
+                return ((int) $maxAge) - ((int) $age);
             }
 
             return (int) $maxAge;
@@ -183,7 +183,7 @@ final class CachePlugin implements Plugin
             return (new \DateTime($header))->getTimestamp() - (new \DateTime())->getTimestamp();
         }
 
-        return $this->config['default_ttl'];
+        return (int) $this->config['default_ttl'];
     }
 
     /**
