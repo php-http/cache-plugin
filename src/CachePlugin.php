@@ -78,7 +78,7 @@ final class CachePlugin implements Plugin
         }
 
         return $next($request)->then(function (ResponseInterface $response) use ($cacheItem) {
-            if ($this->isCacheable($response) && ($maxAge = $this->getMaxAge($response)) > 0) {
+            if ($this->isCacheable($response)) {
                 $bodyStream = $response->getBody();
                 $body = $bodyStream->__toString();
                 if ($bodyStream->isSeekable()) {
@@ -88,7 +88,7 @@ final class CachePlugin implements Plugin
                 }
 
                 $cacheItem->set(['response' => $response, 'body' => $body])
-                    ->expiresAfter($maxAge);
+                    ->expiresAfter($this->getMaxAge($response));
                 $this->pool->save($cacheItem);
             }
 
