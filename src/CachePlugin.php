@@ -150,7 +150,7 @@ final class CachePlugin implements Plugin
      */
     private function createCacheKey(RequestInterface $request)
     {
-        return md5($request->getMethod().' '.$request->getUri());
+        return sha1($request->getMethod().' '.$request->getUri());
     }
 
     /**
