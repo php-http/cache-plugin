@@ -42,7 +42,7 @@ class CachePluginSpec extends ObjectBehavior
         $response->getHeader('Cache-Control')->willReturn(array());
         $response->getHeader('Expires')->willReturn(array());
 
-        $pool->getItem('e3b717d5883a45ef9493d009741f7c64')->shouldBeCalled()->willReturn($item);
+        $pool->getItem('d20f64acc6e70b6079845f2fe357732929550ae1')->shouldBeCalled()->willReturn($item);
         $item->isHit()->willReturn(false);
         $item->set(['response' => $response, 'body' => $httpBody])->willReturn($item)->shouldBeCalled();
         $item->expiresAfter(60)->willReturn($item)->shouldBeCalled();
@@ -63,7 +63,7 @@ class CachePluginSpec extends ObjectBehavior
         $response->getHeader('Cache-Control')->willReturn(array());
         $response->getHeader('Expires')->willReturn(array());
 
-        $pool->getItem('e3b717d5883a45ef9493d009741f7c64')->shouldBeCalled()->willReturn($item);
+        $pool->getItem('d20f64acc6e70b6079845f2fe357732929550ae1')->shouldBeCalled()->willReturn($item);
         $item->isHit()->willReturn(false);
 
         $next = function (RequestInterface $request) use ($response) {
@@ -101,7 +101,7 @@ class CachePluginSpec extends ObjectBehavior
         $response->getHeader('Age')->willReturn(array('15'));
         $response->getHeader('Expires')->willReturn(array());
 
-        $pool->getItem('e3b717d5883a45ef9493d009741f7c64')->shouldBeCalled()->willReturn($item);
+        $pool->getItem('d20f64acc6e70b6079845f2fe357732929550ae1')->shouldBeCalled()->willReturn($item);
         $item->isHit()->willReturn(false);
 
         // 40-15 should be 25
