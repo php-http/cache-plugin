@@ -89,7 +89,10 @@ final class CachePlugin implements Plugin
         return $next($request)->then(function (ResponseInterface $response) use ($cacheItem) {
             if (304 === $response->getStatusCode()) {
                 if (!$cacheItem->isHit()) {
-                    // We do not have the item in cache. We can return the cached response.
+                    /* 
+                     * We do not have the item in cache. This plugin did not add If-Modified-Since 
+                     * or If-None-Match headers. Return the response from server.
+                     */
                     return $response;
                 }
 
