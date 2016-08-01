@@ -158,7 +158,7 @@ final class CachePlugin implements Plugin
      *
      * @param ResponseInterface $response
      *
-     * @return int|null
+     * @return int
      */
     private function getMaxAge(ResponseInterface $response)
     {
