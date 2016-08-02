@@ -78,7 +78,7 @@ final class CachePlugin implements Plugin
         }
 
         return $next($request)->then(function (ResponseInterface $response) use ($cacheItem) {
-            if ($this->isCacheable($response)) {
+            if ($this->isCacheable($response) && ($maxAge = $this->getMaxAge($response)) > 0) {
                 $bodyStream = $response->getBody();
                 $body = $bodyStream->__toString();
                 if ($bodyStream->isSeekable()) {
@@ -88,7 +88,7 @@ final class CachePlugin implements Plugin
                 }
 
                 $cacheItem->set(['response' => $response, 'body' => $body])
-                    ->expiresAfter($this->getMaxAge($response));
+                    ->expiresAfter($maxAge);
                 $this->pool->save($cacheItem);
             }
 
@@ -159,12 +159,12 @@ final class CachePlugin implements Plugin
      *
      * @param ResponseInterface $response
      *
-     * @return int|null
+     * @return int
      */
     private function getMaxAge(ResponseInterface $response)
     {
         if (!$this->config['respect_cache_headers']) {
-            return $this->config['default_ttl'];
+            return (int) $this->config['default_ttl'];
         }
 
         // check for max age in the Cache-Control header
@@ -172,7 +172,7 @@ final class CachePlugin implements Plugin
         if (!is_bool($maxAge)) {
             $ageHeaders = $response->getHeader('Age');
             foreach ($ageHeaders as $age) {
-                return $maxAge - ((int) $age);
+                return ((int) $maxAge) - ((int) $age);
             }
 
             return (int) $maxAge;
@@ -184,7 +184,7 @@ final class CachePlugin implements Plugin
             return (new \DateTime($header))->getTimestamp() - (new \DateTime())->getTimestamp();
         }
 
-        return $this->config['default_ttl'];
+        return (int) $this->config['default_ttl'];
     }
 
     /**
