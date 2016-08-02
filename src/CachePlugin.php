@@ -74,6 +74,7 @@ final class CachePlugin implements Plugin
 
         if ($cacheItem->isHit()) {
             $data = $cacheItem->get();
+            // The isset() is to be removed in 2.0.
             if (isset($data['expiresAt']) && time() < $data['expiresAt']) {
                 // This item is still valid according to previous cache headers
                 return new FulfilledPromise($this->createResponseFromCacheItem($cacheItem));
@@ -273,6 +274,7 @@ final class CachePlugin implements Plugin
     private function getModifiedSinceHeaderValue(CacheItemInterface $cacheItem)
     {
         $data = $cacheItem->get();
+        // The isset() is to be removed in 2.0.
         if (!isset($data['createdAt'])) {
             return;
         }
@@ -293,6 +295,7 @@ final class CachePlugin implements Plugin
     private function getETag(CacheItemInterface $cacheItem)
     {
         $data = $cacheItem->get();
+        // The isset() is to be removed in 2.0.
         if (!isset($data['etag'])) {
             return;
         }
