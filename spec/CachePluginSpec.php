@@ -16,7 +16,10 @@ class CachePluginSpec extends ObjectBehavior
 {
     function let(CacheItemPoolInterface $pool, StreamFactory $streamFactory)
     {
-        $this->beConstructedWith($pool, $streamFactory, ['default_ttl'=>60, 'cache_lifetime'=>1000]);
+        $this->beConstructedWith($pool, $streamFactory, [
+            'default_ttl' => 60,
+            'cache_lifetime'=>1000
+        ]);
     }
 
     function it_is_initializable(CacheItemPoolInterface $pool)
