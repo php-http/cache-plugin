@@ -119,12 +119,12 @@ final class CachePlugin implements Plugin
                 $cacheItem
                     ->expiresAfter($this->config['cache_lifetime'] + $maxAge)
                     ->set([
-                    'response' => $response,
-                    'body' => $body,
-                    'expiresAt' => $currentTime + $maxAge,
-                    'createdAt' => $currentTime,
-                    'etag' => $response->getHeader('ETag'),
-                ]);
+                        'response' => $response,
+                        'body' => $body,
+                        'expiresAt' => $currentTime + $maxAge,
+                        'createdAt' => $currentTime,
+                        'etag' => $response->getHeader('ETag'),
+                    ]);
                 $this->pool->save($cacheItem);
             }
 
