@@ -18,7 +18,7 @@ class CachePluginSpec extends ObjectBehavior
     {
         $this->beConstructedWith($pool, $streamFactory, [
             'default_ttl' => 60,
-            'cache_lifetime'=>1000
+            'cache_lifetime' => 1000
         ]);
     }
 
