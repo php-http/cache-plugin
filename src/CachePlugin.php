@@ -302,7 +302,5 @@ final class CachePlugin implements Plugin
                 return $etag;
             }
         }
-
-        return;
     }
 }
