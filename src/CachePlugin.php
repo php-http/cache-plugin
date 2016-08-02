@@ -38,7 +38,8 @@ final class CachePlugin implements Plugin
      * @param array                  $config        {
      *
      *     @var bool $respect_cache_headers Whether to look at the cache directives or ignore them
-     *     @var int $default_ttl If we do not respect cache headers or can't calculate a good ttl, use this value.
+     *     @var int $default_ttl If we do not respect cache headers or can't calculate a good ttl, use this value
+     *     @var string $hash_algo The hashing algorithm to use when generating cache keys.
      * }
      */
     public function __construct(CacheItemPoolInterface $pool, StreamFactory $streamFactory, array $config = [])
@@ -150,7 +151,7 @@ final class CachePlugin implements Plugin
      */
     private function createCacheKey(RequestInterface $request)
     {
-        return md5($request->getMethod().' '.$request->getUri());
+        return hash($this->config['hash_algo'], $request->getMethod().' '.$request->getUri());
     }
 
     /**
@@ -196,9 +197,11 @@ final class CachePlugin implements Plugin
         $resolver->setDefaults([
             'default_ttl' => null,
             'respect_cache_headers' => true,
+            'hash_algo' => 'sha1',
         ]);
 
         $resolver->setAllowedTypes('default_ttl', ['int', 'null']);
         $resolver->setAllowedTypes('respect_cache_headers', 'bool');
+        $resolver->setAllowedValues('hash_algo', hash_algos());
     }
 }
