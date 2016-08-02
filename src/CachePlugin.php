@@ -76,10 +76,8 @@ final class CachePlugin implements Plugin
             }
 
             // Add headers to ask the server if this cache is still valid
-            if ($mod = $this->getModifiedAt($cacheItem)) {
-                $mod = new \DateTime('@'.$mod);
-                $mod->setTimezone(new \DateTimeZone('GMT'));
-                $request = $request->withHeader('If-Modified-Since', sprintf('%s GMT', $mod->format('l, d-M-y H:i:s')));
+            if ($modifiedSinceValue = $this->getModifiedSinceHeaderValue($cacheItem)) {
+                $request = $request->withHeader('If-Modified-Since', $modifiedSinceValue);
             }
 
             if ($etag = $this->getETag($cacheItem)) {
@@ -117,13 +115,14 @@ final class CachePlugin implements Plugin
                 }
 
                 $maxAge = $this->getMaxAge($response);
+                $currentTime = time();
                 $cacheItem
                     ->expiresAfter($this->config['cache_lifetime'] + $maxAge)
                     ->set([
                     'response' => $response,
                     'body' => $body,
-                    'expiresAt' => time() + $maxAge,
-                    'createdAt' => time(),
+                    'expiresAt' => $currentTime + $maxAge,
+                    'createdAt' => $currentTime,
                     'etag' => $response->getHeader('ETag'),
                 ]);
                 $this->pool->save($cacheItem);
@@ -232,7 +231,7 @@ final class CachePlugin implements Plugin
     private function configureOptions(OptionsResolver $resolver)
     {
         $resolver->setDefaults([
-            'cache_lifetime' => 2592000, // 30 days
+            'cache_lifetime' => 86400 * 30, // 30 days
             'default_ttl' => null,
             'respect_cache_headers' => true,
             'hash_algo' => 'sha1',
@@ -261,20 +260,23 @@ final class CachePlugin implements Plugin
     }
 
     /**
-     * Get the timestamp when the cached response was stored.
+     * Get the value of the "If-Modified-Since" header.
      *
      * @param CacheItemInterface $cacheItem
      *
-     * @return int|null
+     * @return string|null
      */
-    private function getModifiedAt(CacheItemInterface $cacheItem)
+    private function getModifiedSinceHeaderValue(CacheItemInterface $cacheItem)
     {
         $data = $cacheItem->get();
         if (!isset($data['createdAt'])) {
             return;
         }
 
-        return $data['createdAt'];
+        $modified = new \DateTime('@'.$data['createdAt']);
+        $modified->setTimezone(new \DateTimeZone('GMT'));
+
+        return sprintf('%s GMT', $modified->format('l, d-M-y H:i:s'));
     }
 
     /**
