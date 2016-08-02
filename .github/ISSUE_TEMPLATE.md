@@ -1,7 +1,7 @@
 | Q            | A
 | ------------ | ---
-| Bug?         | no
-| New Feature? | no
+| Bug?         | no|yes
+| New Feature? | no|yes
 | Version      | Specific version or SHA of a commit
 
 
