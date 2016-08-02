@@ -41,7 +41,7 @@ final class CachePlugin implements Plugin
      *     @var bool $respect_cache_headers Whether to look at the cache directives or ignore them
      *     @var int $default_ttl (seconds) If we do not respect cache headers or can't calculate a good ttl, use this
      *              value
-     *     @var string $hash_algo The hashing algorithm to use when generating cache keys.
+     *     @var string $hash_algo The hashing algorithm to use when generating cache keys
      *     @var int $cache_lifetime (seconds) To support serving a previous stale response when the server answers 304
      *              we have to store the cache for a longer time that the server originally says it is valid for.
      *              We store a cache item for $cache_lifetime + max age of the response.
