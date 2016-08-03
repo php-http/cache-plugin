@@ -5,6 +5,7 @@
 
 ### Added
 
+- Support for cache validation with ETag and Last-Modified headers. (Enabled automatically when the server sends the relevant headers.)
 - `hash_algo` config option used for cache key generation (defaults to **sha1**).
 
 ### Changed
