@@ -43,7 +43,7 @@ final class CachePlugin implements Plugin
      *              value
      *     @var string $hash_algo The hashing algorithm to use when generating cache keys
      *     @var int $cache_lifetime (seconds) To support serving a previous stale response when the server answers 304
-     *              we have to store the cache for a longer time that the server originally says it is valid for.
+     *              we have to store the cache for a longer time than the server originally says it is valid for.
      *              We store a cache item for $cache_lifetime + max age of the response.
      * }
      */
