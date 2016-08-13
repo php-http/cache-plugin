@@ -1,5 +1,10 @@
 # Change Log
 
+## UNRELEASED
+
+### Fixed
+
+- Issue when you use `respect_cache_headers=>false` in combination with `default_ttl=>null`.
 
 ## 1.1.0 - 2016-08-04
 

@@ -144,7 +144,7 @@ final class CachePlugin implements Plugin
     private function calculateCacheItemExpiresAfter($maxAge)
     {
         if ($this->config['cache_lifetime'] === null && $maxAge === null) {
-            return null;
+            return;
         }
 
         return $this->config['cache_lifetime'] + $maxAge;
@@ -157,11 +157,11 @@ final class CachePlugin implements Plugin
      */
     private function getResponseExpiresAt($maxAge)
     {
-        if ($maxAge !== null) {
-            return time() + $maxAge;
+        if ($maxAge === null) {
+            return;
         }
 
-        return null;
+        return time() + $maxAge;
     }
 
     /**
