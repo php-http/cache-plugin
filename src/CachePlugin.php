@@ -74,8 +74,8 @@ final class CachePlugin implements Plugin
 
         if ($cacheItem->isHit()) {
             $data = $cacheItem->get();
-            // The isset() is to be removed in 2.0.
-            if (isset($data['expiresAt']) && time() < $data['expiresAt']) {
+            // The array_key_exists() is to be removed in 2.0.
+            if (array_key_exists('expiresAt', $data) && ($data['expiresAt'] === null || time() < $data['expiresAt'])) {
                 // This item is still valid according to previous cache headers
                 return new FulfilledPromise($this->createResponseFromCacheItem($cacheItem));
             }
@@ -103,8 +103,8 @@ final class CachePlugin implements Plugin
                 // The cached response we have is still valid
                 $data = $cacheItem->get();
                 $maxAge = $this->getMaxAge($response);
-                $data['expiresAt'] = time() + $maxAge;
-                $cacheItem->set($data)->expiresAfter($this->config['cache_lifetime'] + $maxAge);
+                $data['expiresAt'] = $this->getResponseExpiresAt($maxAge);
+                $cacheItem->set($data)->expiresAfter($this->calculateCacheItemExpiresAfter($maxAge));
                 $this->pool->save($cacheItem);
 
                 return $this->createResponseFromCacheItem($cacheItem);
@@ -120,14 +120,13 @@ final class CachePlugin implements Plugin
                 }
 
                 $maxAge = $this->getMaxAge($response);
-                $currentTime = time();
                 $cacheItem
-                    ->expiresAfter($this->config['cache_lifetime'] + $maxAge)
+                    ->expiresAfter($this->calculateCacheItemExpiresAfter($maxAge))
                     ->set([
                         'response' => $response,
                         'body' => $body,
-                        'expiresAt' => $currentTime + $maxAge,
-                        'createdAt' => $currentTime,
+                        'expiresAt' => $this->getResponseExpiresAt($maxAge),
+                        'createdAt' => time(),
                         'etag' => $response->getHeader('ETag'),
                     ]);
                 $this->pool->save($cacheItem);
@@ -135,6 +134,34 @@ final class CachePlugin implements Plugin
 
             return $response;
         });
+    }
+
+    /**
+     * @param int|null $maxAge
+     *
+     * @return int|null
+     */
+    private function calculateCacheItemExpiresAfter($maxAge)
+    {
+        if ($this->config['cache_lifetime'] === null && $maxAge === null) {
+            return null;
+        }
+
+        return $this->config['cache_lifetime'] + $maxAge;
+    }
+
+    /**
+     * @param int|null $maxAge
+     *
+     * @return int|null
+     */
+    private function getResponseExpiresAt($maxAge)
+    {
+        if ($maxAge !== null) {
+            return time() + $maxAge;
+        }
+
+        return null;
     }
 
     /**
