@@ -2,9 +2,14 @@
 
 ## UNRELEASED
 
+### Changed
+
+- The default value for ``default_ttl`` is changed from ``null`` to ``0``. 
+
 ### Fixed
 
 - Issue when you use `respect_cache_headers=>false` in combination with `default_ttl=>null`.
+- We allow ``cache_lifetime`` to be set to ``null``.
 
 ## 1.1.0 - 2016-08-04
 

@@ -264,12 +264,12 @@ final class CachePlugin implements Plugin
     {
         $resolver->setDefaults([
             'cache_lifetime' => 86400 * 30, // 30 days
-            'default_ttl' => null,
+            'default_ttl' => 0,
             'respect_cache_headers' => true,
             'hash_algo' => 'sha1',
         ]);
 
-        $resolver->setAllowedTypes('cache_lifetime', 'int');
+        $resolver->setAllowedTypes('cache_lifetime', ['int', 'null']);
         $resolver->setAllowedTypes('default_ttl', ['int', 'null']);
         $resolver->setAllowedTypes('respect_cache_headers', 'bool');
         $resolver->setAllowedValues('hash_algo', hash_algos());
