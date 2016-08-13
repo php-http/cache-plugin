@@ -103,7 +103,7 @@ final class CachePlugin implements Plugin
                 // The cached response we have is still valid
                 $data = $cacheItem->get();
                 $maxAge = $this->getMaxAge($response);
-                $data['expiresAt'] = $this->getResponseExpiresAt($maxAge);
+                $data['expiresAt'] = $this->calculateResponseExpiresAt($maxAge);
                 $cacheItem->set($data)->expiresAfter($this->calculateCacheItemExpiresAfter($maxAge));
                 $this->pool->save($cacheItem);
 
@@ -125,7 +125,7 @@ final class CachePlugin implements Plugin
                     ->set([
                         'response' => $response,
                         'body' => $body,
-                        'expiresAt' => $this->getResponseExpiresAt($maxAge),
+                        'expiresAt' => $this->calculateResponseExpiresAt($maxAge),
                         'createdAt' => time(),
                         'etag' => $response->getHeader('ETag'),
                     ]);
@@ -155,7 +155,7 @@ final class CachePlugin implements Plugin
      *
      * @return int|null
      */
-    private function getResponseExpiresAt($maxAge)
+    private function calculateResponseExpiresAt($maxAge)
     {
         if ($maxAge === null) {
             return;
