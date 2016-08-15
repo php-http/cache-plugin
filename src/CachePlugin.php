@@ -74,8 +74,8 @@ final class CachePlugin implements Plugin
 
         if ($cacheItem->isHit()) {
             $data = $cacheItem->get();
-            // The isset() is to be removed in 2.0.
-            if (isset($data['expiresAt']) && time() < $data['expiresAt']) {
+            // The array_key_exists() is to be removed in 2.0.
+            if (array_key_exists('expiresAt', $data) && ($data['expiresAt'] === null || time() < $data['expiresAt'])) {
                 // This item is still valid according to previous cache headers
                 return new FulfilledPromise($this->createResponseFromCacheItem($cacheItem));
             }
@@ -103,8 +103,8 @@ final class CachePlugin implements Plugin
                 // The cached response we have is still valid
                 $data = $cacheItem->get();
                 $maxAge = $this->getMaxAge($response);
-                $data['expiresAt'] = time() + $maxAge;
-                $cacheItem->set($data)->expiresAfter($this->config['cache_lifetime'] + $maxAge);
+                $data['expiresAt'] = $this->calculateResponseExpiresAt($maxAge);
+                $cacheItem->set($data)->expiresAfter($this->calculateCacheItemExpiresAfter($maxAge));
                 $this->pool->save($cacheItem);
 
                 return $this->createResponseFromCacheItem($cacheItem);
@@ -120,14 +120,13 @@ final class CachePlugin implements Plugin
                 }
 
                 $maxAge = $this->getMaxAge($response);
-                $currentTime = time();
                 $cacheItem
-                    ->expiresAfter($this->config['cache_lifetime'] + $maxAge)
+                    ->expiresAfter($this->calculateCacheItemExpiresAfter($maxAge))
                     ->set([
                         'response' => $response,
                         'body' => $body,
-                        'expiresAt' => $currentTime + $maxAge,
-                        'createdAt' => $currentTime,
+                        'expiresAt' => $this->calculateResponseExpiresAt($maxAge),
+                        'createdAt' => time(),
                         'etag' => $response->getHeader('ETag'),
                     ]);
                 $this->pool->save($cacheItem);
@@ -135,6 +134,40 @@ final class CachePlugin implements Plugin
 
             return $response;
         });
+    }
+
+    /**
+     * Calculate the timestamp when this cache item should be dropped from the cache. The lowest value that can be
+     * returned is $maxAge.
+     *
+     * @param int|null $maxAge
+     *
+     * @return int|null Unix system time passed to the PSR-6 cache
+     */
+    private function calculateCacheItemExpiresAfter($maxAge)
+    {
+        if ($this->config['cache_lifetime'] === null && $maxAge === null) {
+            return;
+        }
+
+        return $this->config['cache_lifetime'] + $maxAge;
+    }
+
+    /**
+     * Calculate the timestamp when a response expires. After that timestamp, we need to send a
+     * If-Modified-Since / If-None-Match request to validate the response.
+     *
+     * @param int|null $maxAge
+     *
+     * @return int|null Unix system time. A null value means that the response expires when the cache item expires
+     */
+    private function calculateResponseExpiresAt($maxAge)
+    {
+        if ($maxAge === null) {
+            return;
+        }
+
+        return time() + $maxAge;
     }
 
     /**
@@ -237,12 +270,12 @@ final class CachePlugin implements Plugin
     {
         $resolver->setDefaults([
             'cache_lifetime' => 86400 * 30, // 30 days
-            'default_ttl' => null,
+            'default_ttl' => 0,
             'respect_cache_headers' => true,
             'hash_algo' => 'sha1',
         ]);
 
-        $resolver->setAllowedTypes('cache_lifetime', 'int');
+        $resolver->setAllowedTypes('cache_lifetime', ['int', 'null']);
         $resolver->setAllowedTypes('default_ttl', ['int', 'null']);
         $resolver->setAllowedTypes('respect_cache_headers', 'bool');
         $resolver->setAllowedValues('hash_algo', hash_algos());
