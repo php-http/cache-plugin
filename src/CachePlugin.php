@@ -142,7 +142,7 @@ final class CachePlugin implements Plugin
      *
      * @param int|null $maxAge
      *
-     * @return int|null Unix system time. @see PSR6 for caching
+     * @return int|null Unix system time passed to the PSR-6 cache
      */
     private function calculateCacheItemExpiresAfter($maxAge)
     {
