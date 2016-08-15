@@ -159,7 +159,7 @@ final class CachePlugin implements Plugin
      *
      * @param int|null $maxAge
      *
-     * @return int|null Unix system time
+     * @return int|null Unix system time. A null value means that the response expires when the cache item expires.
      */
     private function calculateResponseExpiresAt($maxAge)
     {
