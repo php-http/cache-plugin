@@ -137,8 +137,8 @@ final class CachePlugin implements Plugin
     }
 
     /**
-     * Calculate the timestamp when this cache item should be dropped from the cache. The lowest value return after
-     * the calculation is $maxAge.
+     * Calculate the timestamp when this cache item should be dropped from the cache. The lowest value that can be
+     * returned is $maxAge.
      *
      * @param int|null $maxAge
      *
