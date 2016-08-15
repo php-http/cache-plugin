@@ -137,9 +137,12 @@ final class CachePlugin implements Plugin
     }
 
     /**
+     * Calculate the timestamp when this cache item should be dropped from the cache. The lowest value return after
+     * the calculation is $maxAge.
+     *
      * @param int|null $maxAge
      *
-     * @return int|null
+     * @return int|null Unix system time
      */
     private function calculateCacheItemExpiresAfter($maxAge)
     {
@@ -151,6 +154,9 @@ final class CachePlugin implements Plugin
     }
 
     /**
+     * Calculate the timestamp when a response expires. After that timestamp, we need to send a
+     * If-Modified-Since / If-None-Match request to validate the response
+     *
      * @param int|null $maxAge
      *
      * @return int|null
