@@ -155,7 +155,7 @@ final class CachePlugin implements Plugin
 
     /**
      * Calculate the timestamp when a response expires. After that timestamp, we need to send a
-     * If-Modified-Since / If-None-Match request to validate the response
+     * If-Modified-Since / If-None-Match request to validate the response.
      *
      * @param int|null $maxAge
      *
