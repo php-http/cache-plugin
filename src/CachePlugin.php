@@ -205,7 +205,6 @@ final class CachePlugin implements Plugin
         $headers = $response->getHeader('Cache-Control');
         foreach ($headers as $header) {
             if (preg_match(sprintf('|%s=?([0-9]+)?|i', $name), $header, $matches)) {
-
                 // return the value for $name if it exists
                 if (isset($matches[1])) {
                     return $matches[1];
@@ -228,6 +227,7 @@ final class CachePlugin implements Plugin
         if ('POST' === $request->getMethod()) {
             return hash($this->config['hash_algo'], $request->getMethod().' '.$request->getUri().' '.$request->getBody());
         }
+
         return hash($this->config['hash_algo'], $request->getMethod().' '.$request->getUri());
     }
 
