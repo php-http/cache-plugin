@@ -85,7 +85,7 @@ class CachePluginSpec extends ObjectBehavior
         $this->handleRequest($request, $next, function () {});
     }
 
-    function it_doesnt_store_post_requests(CacheItemPoolInterface $pool, CacheItemInterface $item, RequestInterface $request, ResponseInterface $response)
+    function it_doesnt_store_post_requests_by_default(CacheItemPoolInterface $pool, CacheItemInterface $item, RequestInterface $request, ResponseInterface $response)
     {
         $request->getMethod()->willReturn('POST');
         $request->getUri()->willReturn('/');
@@ -97,6 +97,49 @@ class CachePluginSpec extends ObjectBehavior
         $this->handleRequest($request, $next, function () {});
     }
 
+    function it_stores_post_requests_when_allowed(CacheItemPoolInterface $pool, CacheItemInterface $item, RequestInterface $request, ResponseInterface $response, StreamFactory $streamFactory, StreamInterface $stream)
+    {
+        $this->beConstructedWith($pool, $streamFactory, [
+            'default_ttl' => 60,
+            'cache_lifetime' => 1000,
+            'methods' => ['GET', 'HEAD', 'POST']
+        ]);
+
+        $httpBody = 'hello=world';
+        $stream->__toString()->willReturn($httpBody);
+        $stream->isSeekable()->willReturn(true);
+        $stream->rewind()->shouldBeCalled();
+
+        $request->getMethod()->willReturn('POST');
+        $request->getUri()->willReturn('/post');
+        $request->getBody()->willReturn($stream);
+
+        $response->getStatusCode()->willReturn(200);
+        $response->getBody()->willReturn($stream);
+        $response->getHeader('Cache-Control')->willReturn(array())->shouldBeCalled();
+        $response->getHeader('Expires')->willReturn(array())->shouldBeCalled();
+        $response->getHeader('ETag')->willReturn(array())->shouldBeCalled();
+
+        $pool->getItem('e4311a9af932c603b400a54efab21b6d7dea7a90')->shouldBeCalled()->willReturn($item);
+        $item->isHit()->willReturn(false);
+        $item->expiresAfter(1060)->willReturn($item)->shouldBeCalled();
+
+        $item->set($this->getCacheItemMatcher([
+            'response' => $response->getWrappedObject(),
+            'body' => $httpBody,
+            'expiresAt' => 0,
+            'createdAt' => 0,
+            'etag' => []
+        ]))->willReturn($item)->shouldBeCalled();
+
+        $pool->save(Argument::any())->shouldBeCalled();
+
+        $next = function (RequestInterface $request) use ($response) {
+            return new FulfilledPromise($response->getWrappedObject());
+        };
+
+        $this->handleRequest($request, $next, function () {});
+    }
 
     function it_calculate_age_from_response(CacheItemPoolInterface $pool, CacheItemInterface $item, RequestInterface $request, ResponseInterface $response, StreamInterface $stream)
     {

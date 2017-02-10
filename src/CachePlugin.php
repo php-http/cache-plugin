@@ -64,7 +64,7 @@ final class CachePlugin implements Plugin
     {
         $method = strtoupper($request->getMethod());
         // if the request not is cachable, move to $next
-        if ($method !== 'GET' && $method !== 'HEAD') {
+        if (!in_array($method, $this->config['methods'])) {
             return $next($request);
         }
 
@@ -225,6 +225,9 @@ final class CachePlugin implements Plugin
      */
     private function createCacheKey(RequestInterface $request)
     {
+        if ('POST' === $request->getMethod()) {
+            return hash($this->config['hash_algo'], $request->getMethod().' '.$request->getUri().' '.$request->getBody());
+        }
         return hash($this->config['hash_algo'], $request->getMethod().' '.$request->getUri());
     }
 
@@ -273,12 +276,17 @@ final class CachePlugin implements Plugin
             'default_ttl' => 0,
             'respect_cache_headers' => true,
             'hash_algo' => 'sha1',
+            'methods' => ['GET', 'HEAD'],
         ]);
 
         $resolver->setAllowedTypes('cache_lifetime', ['int', 'null']);
         $resolver->setAllowedTypes('default_ttl', ['int', 'null']);
         $resolver->setAllowedTypes('respect_cache_headers', 'bool');
+        $resolver->setAllowedTypes('methods', 'array');
         $resolver->setAllowedValues('hash_algo', hash_algos());
+        $resolver->setAllowedValues('methods', function ($value) {
+            return 0 === count(array_diff($value, ['GET', 'HEAD', 'POST']));
+        });
     }
 
     /**
