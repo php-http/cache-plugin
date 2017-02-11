@@ -187,7 +187,7 @@ final class CachePlugin implements Plugin
         }
         if ($this->getCacheControlDirective($response, 'no-store') ||
             $this->getCacheControlDirective($response, 'private')) {
-                return false;
+            return false;
         }
 
         return true;
