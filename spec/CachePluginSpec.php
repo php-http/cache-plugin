@@ -14,7 +14,7 @@ use Psr\Http\Message\StreamInterface;
 
 class CachePluginSpec extends ObjectBehavior
 {
-    function let(CacheItemPoolInterface $pool, StreamFactory $streamFactory)
+    public function let(CacheItemPoolInterface $pool, StreamFactory $streamFactory)
     {
         $this->beConstructedWith($pool, $streamFactory, [
             'default_ttl' => 60,
@@ -22,18 +22,23 @@ class CachePluginSpec extends ObjectBehavior
         ]);
     }
 
-    function it_is_initializable(CacheItemPoolInterface $pool)
+    public function it_is_initializable(CacheItemPoolInterface $pool)
     {
         $this->shouldHaveType('Http\Client\Common\Plugin\CachePlugin');
     }
 
-    function it_is_a_plugin()
+    public function it_is_a_plugin()
     {
         $this->shouldImplement('Http\Client\Common\Plugin');
     }
 
-    function it_caches_responses(CacheItemPoolInterface $pool, CacheItemInterface $item, RequestInterface $request, ResponseInterface $response, StreamInterface $stream)
-    {
+    public function it_caches_responses(
+        CacheItemPoolInterface $pool,
+        CacheItemInterface $item,
+        RequestInterface $request,
+        ResponseInterface $response,
+        StreamInterface $stream
+    ) {
         $httpBody = 'body';
         $stream->__toString()->willReturn($httpBody);
         $stream->isSeekable()->willReturn(true);
@@ -64,11 +69,16 @@ class CachePluginSpec extends ObjectBehavior
             return new FulfilledPromise($response->getWrappedObject());
         };
 
-        $this->handleRequest($request, $next, function () {});
+        $this->handleRequest($request, $next, function () {
+        });
     }
 
-    function it_doesnt_store_failed_responses(CacheItemPoolInterface $pool, CacheItemInterface $item, RequestInterface $request, ResponseInterface $response)
-    {
+    public function it_doesnt_store_failed_responses(
+        CacheItemPoolInterface $pool,
+        CacheItemInterface $item,
+        RequestInterface $request,
+        ResponseInterface $response
+    ) {
         $request->getMethod()->willReturn('GET');
         $request->getUri()->willReturn('/');
         $response->getStatusCode()->willReturn(400);
@@ -82,11 +92,16 @@ class CachePluginSpec extends ObjectBehavior
             return new FulfilledPromise($response->getWrappedObject());
         };
 
-        $this->handleRequest($request, $next, function () {});
+        $this->handleRequest($request, $next, function () {
+        });
     }
 
-    function it_doesnt_store_post_requests(CacheItemPoolInterface $pool, CacheItemInterface $item, RequestInterface $request, ResponseInterface $response)
-    {
+    public function it_doesnt_store_post_requests(
+        CacheItemPoolInterface $pool,
+        CacheItemInterface $item,
+        RequestInterface $request,
+        ResponseInterface $response
+    ) {
         $request->getMethod()->willReturn('POST');
         $request->getUri()->willReturn('/');
 
@@ -94,12 +109,17 @@ class CachePluginSpec extends ObjectBehavior
             return new FulfilledPromise($response->getWrappedObject());
         };
 
-        $this->handleRequest($request, $next, function () {});
+        $this->handleRequest($request, $next, function () {
+        });
     }
 
-
-    function it_calculate_age_from_response(CacheItemPoolInterface $pool, CacheItemInterface $item, RequestInterface $request, ResponseInterface $response, StreamInterface $stream)
-    {
+    public function it_calculate_age_from_response(
+        CacheItemPoolInterface $pool,
+        CacheItemInterface $item,
+        RequestInterface $request,
+        ResponseInterface $response,
+        StreamInterface $stream
+    ) {
         $httpBody = 'body';
         $stream->__toString()->willReturn($httpBody);
         $stream->isSeekable()->willReturn(true);
@@ -132,11 +152,17 @@ class CachePluginSpec extends ObjectBehavior
             return new FulfilledPromise($response->getWrappedObject());
         };
 
-        $this->handleRequest($request, $next, function () {});
+        $this->handleRequest($request, $next, function () {
+        });
     }
 
-    function it_saves_etag(CacheItemPoolInterface $pool, CacheItemInterface $item, RequestInterface $request, ResponseInterface $response, StreamInterface $stream)
-    {
+    public function it_saves_etag(
+        CacheItemPoolInterface $pool,
+        CacheItemInterface $item,
+        RequestInterface $request,
+        ResponseInterface $response,
+        StreamInterface $stream
+    ) {
         $httpBody = 'body';
         $stream->__toString()->willReturn($httpBody);
         $stream->isSeekable()->willReturn(true);
@@ -167,17 +193,26 @@ class CachePluginSpec extends ObjectBehavior
             return new FulfilledPromise($response->getWrappedObject());
         };
 
-        $this->handleRequest($request, $next, function () {});
+        $this->handleRequest($request, $next, function () {
+        });
     }
 
-    function it_adds_etag_and_modfied_since_to_request(CacheItemPoolInterface $pool, CacheItemInterface $item, RequestInterface $request, ResponseInterface $response, StreamInterface $stream)
-    {
+    public function it_adds_etag_and_modfied_since_to_request(
+        CacheItemPoolInterface $pool,
+        CacheItemInterface $item,
+        RequestInterface $request,
+        ResponseInterface $response,
+        StreamInterface $stream
+    ) {
         $httpBody = 'body';
 
         $request->getMethod()->willReturn('GET');
         $request->getUri()->willReturn('/');
 
-        $request->withHeader('If-Modified-Since', 'Thursday, 01-Jan-70 01:18:31 GMT')->shouldBeCalled()->willReturn($request);
+        $request
+            ->withHeader('If-Modified-Since', 'Thursday, 01-Jan-70 01:18:31 GMT')
+            ->shouldBeCalled()
+            ->willReturn($request);
         $request->withHeader('If-None-Match', 'foo_etag')->shouldBeCalled()->willReturn($request);
 
         $response->getStatusCode()->willReturn(304);
@@ -196,11 +231,18 @@ class CachePluginSpec extends ObjectBehavior
             return new FulfilledPromise($response->getWrappedObject());
         };
 
-        $this->handleRequest($request, $next, function () {});
+        $this->handleRequest($request, $next, function () {
+        });
     }
 
-    function it_servces_a_cached_response(CacheItemPoolInterface $pool, CacheItemInterface $item, RequestInterface $request, ResponseInterface $response, StreamInterface $stream, StreamFactory $streamFactory)
-    {
+    public function it_servces_a_cached_response(
+        CacheItemPoolInterface $pool,
+        CacheItemInterface $item,
+        RequestInterface $request,
+        ResponseInterface $response,
+        StreamInterface $stream,
+        StreamFactory $streamFactory
+    ) {
         $httpBody = 'body';
 
         $request->getMethod()->willReturn('GET');
@@ -224,11 +266,18 @@ class CachePluginSpec extends ObjectBehavior
             return new FulfilledPromise($response->getWrappedObject());
         };
 
-        $this->handleRequest($request, $next, function () {});
+        $this->handleRequest($request, $next, function () {
+        });
     }
 
-    function it_serves_and_resaved_expired_response(CacheItemPoolInterface $pool, CacheItemInterface $item, RequestInterface $request, ResponseInterface $response, StreamInterface $stream, StreamFactory $streamFactory)
-    {
+    public function it_serves_and_resaved_expired_response(
+        CacheItemPoolInterface $pool,
+        CacheItemInterface $item,
+        RequestInterface $request,
+        ResponseInterface $response,
+        StreamInterface $stream,
+        StreamFactory $streamFactory
+    ) {
         $httpBody = 'body';
 
         $request->getMethod()->willReturn('GET');
@@ -270,7 +319,8 @@ class CachePluginSpec extends ObjectBehavior
             return new FulfilledPromise($response->getWrappedObject());
         };
 
-        $this->handleRequest($request, $next, function () {});
+        $this->handleRequest($request, $next, function () {
+        });
     }
 
 
@@ -283,7 +333,7 @@ class CachePluginSpec extends ObjectBehavior
      */
     private function getCacheItemMatcher(array $expectedData)
     {
-        return Argument::that(function(array $actualData) use ($expectedData) {
+        return Argument::that(function (array $actualData) use ($expectedData) {
             foreach ($expectedData as $key => $value) {
                 if (!isset($actualData[$key])) {
                     return false;
