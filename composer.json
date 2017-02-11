@@ -19,7 +19,8 @@
     },
     "require-dev": {
         "phpspec/phpspec": "^2.5",
-        "henrikbjorn/phpspec-code-coverage" : "^1.0"
+        "henrikbjorn/phpspec-code-coverage" : "^1.0",
+        "squizlabs/php_codesniffer": "^2.8"
     },
     "autoload": {
         "psr-4": {
@@ -33,7 +34,8 @@
     },
     "scripts": {
         "test": "vendor/bin/phpspec run",
-        "test-ci": "vendor/bin/phpspec run -c phpspec.ci.yml"
+        "test-ci": "vendor/bin/phpspec run -c phpspec.ci.yml",
+        "phpcs": "vendor/bin/phpcs src/* spec/*"
     },
     "extra": {
         "branch-alias": {

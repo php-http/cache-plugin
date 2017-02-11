@@ -185,7 +185,8 @@ final class CachePlugin implements Plugin
         if (!$this->config['respect_cache_headers']) {
             return true;
         }
-        if ($this->getCacheControlDirective($response, 'no-store') || $this->getCacheControlDirective($response, 'private')) {
+        if ($this->getCacheControlDirective($response, 'no-store') ||
+            $this->getCacheControlDirective($response, 'private')) {
             return false;
         }
 
@@ -205,7 +206,6 @@ final class CachePlugin implements Plugin
         $headers = $response->getHeader('Cache-Control');
         foreach ($headers as $header) {
             if (preg_match(sprintf('|%s=?([0-9]+)?|i', $name), $header, $matches)) {
-
                 // return the value for $name if it exists
                 if (isset($matches[1])) {
                     return $matches[1];

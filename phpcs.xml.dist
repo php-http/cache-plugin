@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<ruleset name="HTTPlug">
+    <description>PSR-2 without CamelCapsMethodName for tests</description>
+    <rule ref="PSR2" />
+    <rule ref="PSR1.Methods.CamelCapsMethodName">
+        <exclude-pattern>*/spec/*</exclude-pattern>
+    </rule>
+</ruleset>
