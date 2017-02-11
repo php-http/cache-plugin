@@ -97,8 +97,14 @@ class CachePluginSpec extends ObjectBehavior
         $this->handleRequest($request, $next, function () {});
     }
 
-    function it_stores_post_requests_when_allowed(CacheItemPoolInterface $pool, CacheItemInterface $item, RequestInterface $request, ResponseInterface $response, StreamFactory $streamFactory, StreamInterface $stream)
-    {
+    function it_stores_post_requests_when_allowed(
+        CacheItemPoolInterface $pool,
+        CacheItemInterface $item,
+        RequestInterface $request,
+        ResponseInterface $response,
+        StreamFactory $streamFactory,
+        StreamInterface $stream
+    ) {
         $this->beConstructedWith($pool, $streamFactory, [
             'default_ttl' => 60,
             'cache_lifetime' => 1000,
@@ -116,9 +122,9 @@ class CachePluginSpec extends ObjectBehavior
 
         $response->getStatusCode()->willReturn(200);
         $response->getBody()->willReturn($stream);
-        $response->getHeader('Cache-Control')->willReturn(array())->shouldBeCalled();
-        $response->getHeader('Expires')->willReturn(array())->shouldBeCalled();
-        $response->getHeader('ETag')->willReturn(array())->shouldBeCalled();
+        $response->getHeader('Cache-Control')->willReturn([])->shouldBeCalled();
+        $response->getHeader('Expires')->willReturn([])->shouldBeCalled();
+        $response->getHeader('ETag')->willReturn([])->shouldBeCalled();
 
         $pool->getItem('e4311a9af932c603b400a54efab21b6d7dea7a90')->shouldBeCalled()->willReturn($item);
         $item->isHit()->willReturn(false);
