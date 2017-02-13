@@ -282,6 +282,7 @@ final class CachePlugin implements Plugin
         $resolver->setAllowedValues('hash_algo', hash_algos());
         $resolver->setAllowedValues('methods', function ($value) {
             $matches = preg_grep('/[^[:alnum:]!#$%&\'*\/+\-.^_`|~]/', $value);
+
             return empty($matches);
         });
     }
