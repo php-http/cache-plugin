@@ -224,11 +224,7 @@ final class CachePlugin implements Plugin
      */
     private function createCacheKey(RequestInterface $request)
     {
-        if ('POST' === $request->getMethod()) {
-            return hash($this->config['hash_algo'], $request->getMethod().' '.$request->getUri().' '.$request->getBody());
-        }
-
-        return hash($this->config['hash_algo'], $request->getMethod().' '.$request->getUri());
+        return hash($this->config['hash_algo'], $request->getMethod().' '.$request->getUri().$request->getBody());
     }
 
     /**

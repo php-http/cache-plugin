@@ -42,6 +42,8 @@ class CachePluginSpec extends ObjectBehavior
 
         $request->getMethod()->willReturn('GET');
         $request->getUri()->willReturn('/');
+        $request->getBody()->shouldBeCalled();
+
         $response->getStatusCode()->willReturn(200);
         $response->getBody()->willReturn($stream);
         $response->getHeader('Cache-Control')->willReturn(array())->shouldBeCalled();
@@ -72,6 +74,8 @@ class CachePluginSpec extends ObjectBehavior
     {
         $request->getMethod()->willReturn('GET');
         $request->getUri()->willReturn('/');
+        $request->getBody()->shouldBeCalled();
+
         $response->getStatusCode()->willReturn(400);
         $response->getHeader('Cache-Control')->willReturn(array());
         $response->getHeader('Expires')->willReturn(array());
@@ -127,7 +131,7 @@ class CachePluginSpec extends ObjectBehavior
         $response->getHeader('Expires')->willReturn([])->shouldBeCalled();
         $response->getHeader('ETag')->willReturn([])->shouldBeCalled();
 
-        $pool->getItem('e4311a9af932c603b400a54efab21b6d7dea7a90')->shouldBeCalled()->willReturn($item);
+        $pool->getItem('e37195334979e7ca0dda534c48a02c7de8368d64')->shouldBeCalled()->willReturn($item);
         $item->isHit()->willReturn(false);
         $item->expiresAfter(1060)->willReturn($item)->shouldBeCalled();
 
@@ -173,6 +177,8 @@ class CachePluginSpec extends ObjectBehavior
 
         $request->getMethod()->willReturn('GET');
         $request->getUri()->willReturn('/');
+        $request->getBody()->shouldBeCalled();
+
         $response->getStatusCode()->willReturn(200);
         $response->getBody()->willReturn($stream);
         $response->getHeader('Cache-Control')->willReturn(array('max-age=40'));
@@ -207,6 +213,7 @@ class CachePluginSpec extends ObjectBehavior
         $stream->__toString()->willReturn($httpBody);
         $stream->isSeekable()->willReturn(true);
         $stream->rewind()->shouldBeCalled();
+        $request->getBody()->shouldBeCalled();
 
         $request->getMethod()->willReturn('GET');
         $request->getUri()->willReturn('/');
@@ -242,6 +249,7 @@ class CachePluginSpec extends ObjectBehavior
 
         $request->getMethod()->willReturn('GET');
         $request->getUri()->willReturn('/');
+        $request->getBody()->shouldBeCalled();
 
         $request->withHeader('If-Modified-Since', 'Thursday, 01-Jan-70 01:18:31 GMT')->shouldBeCalled()->willReturn($request);
         $request->withHeader('If-None-Match', 'foo_etag')->shouldBeCalled()->willReturn($request);
@@ -271,6 +279,7 @@ class CachePluginSpec extends ObjectBehavior
 
         $request->getMethod()->willReturn('GET');
         $request->getUri()->willReturn('/');
+        $request->getBody()->shouldBeCalled();
 
         $pool->getItem('d20f64acc6e70b6079845f2fe357732929550ae1')->shouldBeCalled()->willReturn($item);
         $item->isHit()->willReturn(true);
@@ -299,6 +308,7 @@ class CachePluginSpec extends ObjectBehavior
 
         $request->getMethod()->willReturn('GET');
         $request->getUri()->willReturn('/');
+        $request->getBody()->shouldBeCalled();
 
         $request->withHeader(Argument::any(), Argument::any())->willReturn($request);
         $request->withHeader(Argument::any(), Argument::any())->willReturn($request);
