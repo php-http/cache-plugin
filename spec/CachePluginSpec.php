@@ -161,10 +161,10 @@ class CachePluginSpec extends ObjectBehavior
         StreamInterface $stream
     ) {
         $this
-            ->shouldThrow(InvalidOptionsException::class)
+            ->shouldThrow("Symfony\Component\OptionsResolver\Exception\InvalidOptionsException")
             ->during('__construct', [$pool, $streamFactory, ['methods' => ['GET', 'HEAD', 'POST ']]]);
         $this
-            ->shouldThrow(InvalidOptionsException::class)
+            ->shouldThrow("Symfony\Component\OptionsResolver\Exception\InvalidOptionsException")
             ->during('__construct', [$pool, $streamFactory, ['methods' => ['GET', 'HEAD"', 'POST']]]);
     }
 
