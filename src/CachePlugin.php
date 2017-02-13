@@ -285,7 +285,8 @@ final class CachePlugin implements Plugin
         $resolver->setAllowedTypes('methods', 'array');
         $resolver->setAllowedValues('hash_algo', hash_algos());
         $resolver->setAllowedValues('methods', function ($value) {
-            return 0 === count(array_diff($value, ['GET', 'HEAD', 'POST']));
+            $matches = preg_grep('/[^[:alnum:]!#$%&\'*\/+\-.^_`|~]/', $value);
+            return empty($matches);
         });
     }
 

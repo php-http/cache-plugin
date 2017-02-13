@@ -11,6 +11,7 @@ use Psr\Cache\CacheItemPoolInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
+use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 
 class CachePluginSpec extends ObjectBehavior
 {
@@ -145,6 +146,22 @@ class CachePluginSpec extends ObjectBehavior
         };
 
         $this->handleRequest($request, $next, function () {});
+    }
+
+    function it_does_not_allow_invalid_request_methods(
+        CacheItemPoolInterface $pool,
+        CacheItemInterface $item,
+        RequestInterface $request,
+        ResponseInterface $response,
+        StreamFactory $streamFactory,
+        StreamInterface $stream
+    ) {
+        $this
+            ->shouldThrow(InvalidOptionsException::class)
+            ->during('__construct', [$pool, $streamFactory, ['methods' => ['GET', 'HEAD', 'POST ']]]);
+        $this
+            ->shouldThrow(InvalidOptionsException::class)
+            ->during('__construct', [$pool, $streamFactory, ['methods' => ['GET', 'HEAD"', 'POST']]]);
     }
 
     function it_calculate_age_from_response(CacheItemPoolInterface $pool, CacheItemInterface $item, RequestInterface $request, ResponseInterface $response, StreamInterface $stream)
