@@ -281,6 +281,7 @@ final class CachePlugin implements Plugin
         $resolver->setAllowedTypes('methods', 'array');
         $resolver->setAllowedValues('hash_algo', hash_algos());
         $resolver->setAllowedValues('methods', function ($value) {
+            /* Any VCHAR, except delimiters. RFC7230 sections 3.1.1 and 3.2.6 */
             $matches = preg_grep('/[^[:alnum:]!#$%&\'*\/+\-.^_`|~]/', $value);
 
             return empty($matches);
