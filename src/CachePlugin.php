@@ -45,7 +45,7 @@ final class CachePlugin implements Plugin
      *     @var int $cache_lifetime (seconds) To support serving a previous stale response when the server answers 304
      *              we have to store the cache for a longer time than the server originally says it is valid for.
      *              We store a cache item for $cache_lifetime + max age of the response.
-     *     @var array $methods case insensitive list of request methods which can be cached.
+     *     @var array $methods case sensitive list of request methods which can be cached.
      * }
      */
     public function __construct(CacheItemPoolInterface $pool, StreamFactory $streamFactory, array $config = [])
