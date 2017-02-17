@@ -11,7 +11,6 @@ use Psr\Cache\CacheItemPoolInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
-use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 
 class CachePluginSpec extends ObjectBehavior
 {
