@@ -45,7 +45,7 @@ final class CachePlugin implements Plugin
      *     @var int $cache_lifetime (seconds) To support serving a previous stale response when the server answers 304
      *              we have to store the cache for a longer time than the server originally says it is valid for.
      *              We store a cache item for $cache_lifetime + max age of the response.
-     *     @var array $methods case sensitive list of request methods which can be cached.
+     *     @var array $methods list of request methods which can be cached.
      * }
      */
     public function __construct(CacheItemPoolInterface $pool, StreamFactory $streamFactory, array $config = [])
@@ -282,8 +282,8 @@ final class CachePlugin implements Plugin
         $resolver->setAllowedTypes('methods', 'array');
         $resolver->setAllowedValues('hash_algo', hash_algos());
         $resolver->setAllowedValues('methods', function ($value) {
-            /* Any VCHAR, except delimiters. RFC7230 sections 3.1.1 and 3.2.6 */
-            $matches = preg_grep('/[^[:alnum:]!#$%&\'*\/+\-.^_`|~]/', $value);
+            /* RFC7230 sections 3.1.1 and 3.2.6 except limited to uppercase characters. */
+            $matches = preg_grep('/[^A-Z0-9!#$%&\'*\/+\-.^_`|~]/', $value);
 
             return empty($matches);
         });

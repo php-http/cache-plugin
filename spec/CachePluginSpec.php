@@ -166,6 +166,9 @@ class CachePluginSpec extends ObjectBehavior
         $this
             ->shouldThrow("Symfony\Component\OptionsResolver\Exception\InvalidOptionsException")
             ->during('__construct', [$pool, $streamFactory, ['methods' => ['GET', 'HEAD"', 'POST']]]);
+        $this
+            ->shouldThrow("Symfony\Component\OptionsResolver\Exception\InvalidOptionsException")
+            ->during('__construct', [$pool, $streamFactory, ['methods' => ['GET', 'head', 'POST']]]);
     }
 
     function it_calculate_age_from_response(CacheItemPoolInterface $pool, CacheItemInterface $item, RequestInterface $request, ResponseInterface $response, StreamInterface $stream)
