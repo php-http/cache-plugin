@@ -49,7 +49,7 @@ class CachePluginSpec extends ObjectBehavior
         $response->getHeader('Expires')->willReturn(array())->shouldBeCalled();
         $response->getHeader('ETag')->willReturn(array())->shouldBeCalled();
 
-        $pool->getItem('15a7c0e71475fda62536abd940c55a9d1749ce47')->shouldBeCalled()->willReturn($item);
+        $pool->getItem('d20f64acc6e70b6079845f2fe357732929550ae1')->shouldBeCalled()->willReturn($item);
         $item->isHit()->willReturn(false);
         $item->expiresAfter(1060)->willReturn($item)->shouldBeCalled();
 
@@ -79,7 +79,7 @@ class CachePluginSpec extends ObjectBehavior
         $response->getHeader('Cache-Control')->willReturn(array());
         $response->getHeader('Expires')->willReturn(array());
 
-        $pool->getItem('15a7c0e71475fda62536abd940c55a9d1749ce47')->shouldBeCalled()->willReturn($item);
+        $pool->getItem('d20f64acc6e70b6079845f2fe357732929550ae1')->shouldBeCalled()->willReturn($item);
         $item->isHit()->willReturn(false);
 
         $next = function (RequestInterface $request) use ($response) {
@@ -188,7 +188,7 @@ class CachePluginSpec extends ObjectBehavior
         $response->getHeader('Expires')->willReturn(array());
         $response->getHeader('ETag')->willReturn(array());
 
-        $pool->getItem('15a7c0e71475fda62536abd940c55a9d1749ce47')->shouldBeCalled()->willReturn($item);
+        $pool->getItem('d20f64acc6e70b6079845f2fe357732929550ae1')->shouldBeCalled()->willReturn($item);
         $item->isHit()->willReturn(false);
 
         $item->set($this->getCacheItemMatcher([
@@ -225,7 +225,7 @@ class CachePluginSpec extends ObjectBehavior
         $response->getHeader('Expires')->willReturn(array());
         $response->getHeader('ETag')->willReturn(array('foo_etag'));
 
-        $pool->getItem('15a7c0e71475fda62536abd940c55a9d1749ce47')->shouldBeCalled()->willReturn($item);
+        $pool->getItem('d20f64acc6e70b6079845f2fe357732929550ae1')->shouldBeCalled()->willReturn($item);
         $item->isHit()->willReturn(false);
         $item->expiresAfter(1060)->willReturn($item);
 
@@ -258,7 +258,7 @@ class CachePluginSpec extends ObjectBehavior
 
         $response->getStatusCode()->willReturn(304);
 
-        $pool->getItem('15a7c0e71475fda62536abd940c55a9d1749ce47')->shouldBeCalled()->willReturn($item);
+        $pool->getItem('d20f64acc6e70b6079845f2fe357732929550ae1')->shouldBeCalled()->willReturn($item);
         $item->isHit()->willReturn(true, false);
         $item->get()->willReturn([
             'response' => $response,
@@ -283,7 +283,7 @@ class CachePluginSpec extends ObjectBehavior
         $request->getUri()->willReturn('/');
         $request->getBody()->shouldBeCalled();
 
-        $pool->getItem('15a7c0e71475fda62536abd940c55a9d1749ce47')->shouldBeCalled()->willReturn($item);
+        $pool->getItem('d20f64acc6e70b6079845f2fe357732929550ae1')->shouldBeCalled()->willReturn($item);
         $item->isHit()->willReturn(true);
         $item->get()->willReturn([
             'response' => $response,
@@ -322,7 +322,7 @@ class CachePluginSpec extends ObjectBehavior
         // Make sure we add back the body
         $response->withBody($stream)->willReturn($response)->shouldBeCalled();
 
-        $pool->getItem('15a7c0e71475fda62536abd940c55a9d1749ce47')->shouldBeCalled()->willReturn($item);
+        $pool->getItem('d20f64acc6e70b6079845f2fe357732929550ae1')->shouldBeCalled()->willReturn($item);
         $item->isHit()->willReturn(true, true);
         $item->expiresAfter(1060)->willReturn($item)->shouldBeCalled();
         $item->get()->willReturn([
