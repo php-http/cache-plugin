@@ -227,7 +227,7 @@ final class CachePlugin implements Plugin
     {
         $body = (string) $request->getBody();
         if (!empty($body)) {
-            $body = ' ' . $body;
+            $body = ' '.$body;
         }
 
         return hash($this->config['hash_algo'], $request->getMethod().' '.$request->getUri().$body);
