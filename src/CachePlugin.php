@@ -45,6 +45,7 @@ final class CachePlugin implements Plugin
      *     @var int $cache_lifetime (seconds) To support serving a previous stale response when the server answers 304
      *              we have to store the cache for a longer time than the server originally says it is valid for.
      *              We store a cache item for $cache_lifetime + max age of the response.
+     *     @var array $methods list of request methods which can be cached.
      * }
      */
     public function __construct(CacheItemPoolInterface $pool, StreamFactory $streamFactory, array $config = [])
@@ -64,7 +65,7 @@ final class CachePlugin implements Plugin
     {
         $method = strtoupper($request->getMethod());
         // if the request not is cachable, move to $next
-        if ($method !== 'GET' && $method !== 'HEAD') {
+        if (!in_array($method, $this->config['methods'])) {
             return $next($request);
         }
 
@@ -205,7 +206,6 @@ final class CachePlugin implements Plugin
         $headers = $response->getHeader('Cache-Control');
         foreach ($headers as $header) {
             if (preg_match(sprintf('|%s=?([0-9]+)?|i', $name), $header, $matches)) {
-
                 // return the value for $name if it exists
                 if (isset($matches[1])) {
                     return $matches[1];
@@ -225,7 +225,12 @@ final class CachePlugin implements Plugin
      */
     private function createCacheKey(RequestInterface $request)
     {
-        return hash($this->config['hash_algo'], $request->getMethod().' '.$request->getUri());
+        $body = (string) $request->getBody();
+        if (!empty($body)) {
+            $body = ' '.$body;
+        }
+
+        return hash($this->config['hash_algo'], $request->getMethod().' '.$request->getUri().$body);
     }
 
     /**
@@ -273,12 +278,20 @@ final class CachePlugin implements Plugin
             'default_ttl' => 0,
             'respect_cache_headers' => true,
             'hash_algo' => 'sha1',
+            'methods' => ['GET', 'HEAD'],
         ]);
 
         $resolver->setAllowedTypes('cache_lifetime', ['int', 'null']);
         $resolver->setAllowedTypes('default_ttl', ['int', 'null']);
         $resolver->setAllowedTypes('respect_cache_headers', 'bool');
+        $resolver->setAllowedTypes('methods', 'array');
         $resolver->setAllowedValues('hash_algo', hash_algos());
+        $resolver->setAllowedValues('methods', function ($value) {
+            /* RFC7230 sections 3.1.1 and 3.2.6 except limited to uppercase characters. */
+            $matches = preg_grep('/[^A-Z0-9!#$%&\'*\/+\-.^_`|~]/', $value);
+
+            return empty($matches);
+        });
     }
 
     /**

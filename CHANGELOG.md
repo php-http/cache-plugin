@@ -1,11 +1,15 @@
 # Change Log
 
+## 1.3.0 - unreleased
+### Added
+
+- New `methods` setting which allows to configure the request methods which can be cached.
 
 ## 1.2.0 - 2016-08-16
 
 ### Changed
 
-- The default value for `default_ttl` is changed from `null` to `0`. 
+- The default value for `default_ttl` is changed from `null` to `0`.
 
 ### Fixed
 

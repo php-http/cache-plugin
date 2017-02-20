@@ -41,6 +41,8 @@ class CachePluginSpec extends ObjectBehavior
 
         $request->getMethod()->willReturn('GET');
         $request->getUri()->willReturn('/');
+        $request->getBody()->shouldBeCalled();
+
         $response->getStatusCode()->willReturn(200);
         $response->getBody()->willReturn($stream);
         $response->getHeader('Cache-Control')->willReturn(array())->shouldBeCalled();
@@ -71,6 +73,8 @@ class CachePluginSpec extends ObjectBehavior
     {
         $request->getMethod()->willReturn('GET');
         $request->getUri()->willReturn('/');
+        $request->getBody()->shouldBeCalled();
+
         $response->getStatusCode()->willReturn(400);
         $response->getHeader('Cache-Control')->willReturn(array());
         $response->getHeader('Expires')->willReturn(array());
@@ -85,7 +89,7 @@ class CachePluginSpec extends ObjectBehavior
         $this->handleRequest($request, $next, function () {});
     }
 
-    function it_doesnt_store_post_requests(CacheItemPoolInterface $pool, CacheItemInterface $item, RequestInterface $request, ResponseInterface $response)
+    function it_doesnt_store_post_requests_by_default(CacheItemPoolInterface $pool, CacheItemInterface $item, RequestInterface $request, ResponseInterface $response)
     {
         $request->getMethod()->willReturn('POST');
         $request->getUri()->willReturn('/');
@@ -97,6 +101,74 @@ class CachePluginSpec extends ObjectBehavior
         $this->handleRequest($request, $next, function () {});
     }
 
+    function it_stores_post_requests_when_allowed(
+        CacheItemPoolInterface $pool,
+        CacheItemInterface $item,
+        RequestInterface $request,
+        ResponseInterface $response,
+        StreamFactory $streamFactory,
+        StreamInterface $stream
+    ) {
+        $this->beConstructedWith($pool, $streamFactory, [
+            'default_ttl' => 60,
+            'cache_lifetime' => 1000,
+            'methods' => ['GET', 'HEAD', 'POST']
+        ]);
+
+        $httpBody = 'hello=world';
+        $stream->__toString()->willReturn($httpBody);
+        $stream->isSeekable()->willReturn(true);
+        $stream->rewind()->shouldBeCalled();
+
+        $request->getMethod()->willReturn('POST');
+        $request->getUri()->willReturn('/post');
+        $request->getBody()->willReturn($stream);
+
+        $response->getStatusCode()->willReturn(200);
+        $response->getBody()->willReturn($stream);
+        $response->getHeader('Cache-Control')->willReturn([])->shouldBeCalled();
+        $response->getHeader('Expires')->willReturn([])->shouldBeCalled();
+        $response->getHeader('ETag')->willReturn([])->shouldBeCalled();
+
+        $pool->getItem('e4311a9af932c603b400a54efab21b6d7dea7a90')->shouldBeCalled()->willReturn($item);
+        $item->isHit()->willReturn(false);
+        $item->expiresAfter(1060)->willReturn($item)->shouldBeCalled();
+
+        $item->set($this->getCacheItemMatcher([
+            'response' => $response->getWrappedObject(),
+            'body' => $httpBody,
+            'expiresAt' => 0,
+            'createdAt' => 0,
+            'etag' => []
+        ]))->willReturn($item)->shouldBeCalled();
+
+        $pool->save(Argument::any())->shouldBeCalled();
+
+        $next = function (RequestInterface $request) use ($response) {
+            return new FulfilledPromise($response->getWrappedObject());
+        };
+
+        $this->handleRequest($request, $next, function () {});
+    }
+
+    function it_does_not_allow_invalid_request_methods(
+        CacheItemPoolInterface $pool,
+        CacheItemInterface $item,
+        RequestInterface $request,
+        ResponseInterface $response,
+        StreamFactory $streamFactory,
+        StreamInterface $stream
+    ) {
+        $this
+            ->shouldThrow("Symfony\Component\OptionsResolver\Exception\InvalidOptionsException")
+            ->during('__construct', [$pool, $streamFactory, ['methods' => ['GET', 'HEAD', 'POST ']]]);
+        $this
+            ->shouldThrow("Symfony\Component\OptionsResolver\Exception\InvalidOptionsException")
+            ->during('__construct', [$pool, $streamFactory, ['methods' => ['GET', 'HEAD"', 'POST']]]);
+        $this
+            ->shouldThrow("Symfony\Component\OptionsResolver\Exception\InvalidOptionsException")
+            ->during('__construct', [$pool, $streamFactory, ['methods' => ['GET', 'head', 'POST']]]);
+    }
 
     function it_calculate_age_from_response(CacheItemPoolInterface $pool, CacheItemInterface $item, RequestInterface $request, ResponseInterface $response, StreamInterface $stream)
     {
@@ -107,6 +179,8 @@ class CachePluginSpec extends ObjectBehavior
 
         $request->getMethod()->willReturn('GET');
         $request->getUri()->willReturn('/');
+        $request->getBody()->shouldBeCalled();
+
         $response->getStatusCode()->willReturn(200);
         $response->getBody()->willReturn($stream);
         $response->getHeader('Cache-Control')->willReturn(array('max-age=40'));
@@ -141,6 +215,7 @@ class CachePluginSpec extends ObjectBehavior
         $stream->__toString()->willReturn($httpBody);
         $stream->isSeekable()->willReturn(true);
         $stream->rewind()->shouldBeCalled();
+        $request->getBody()->shouldBeCalled();
 
         $request->getMethod()->willReturn('GET');
         $request->getUri()->willReturn('/');
@@ -176,6 +251,7 @@ class CachePluginSpec extends ObjectBehavior
 
         $request->getMethod()->willReturn('GET');
         $request->getUri()->willReturn('/');
+        $request->getBody()->shouldBeCalled();
 
         $request->withHeader('If-Modified-Since', 'Thursday, 01-Jan-70 01:18:31 GMT')->shouldBeCalled()->willReturn($request);
         $request->withHeader('If-None-Match', 'foo_etag')->shouldBeCalled()->willReturn($request);
@@ -205,6 +281,7 @@ class CachePluginSpec extends ObjectBehavior
 
         $request->getMethod()->willReturn('GET');
         $request->getUri()->willReturn('/');
+        $request->getBody()->shouldBeCalled();
 
         $pool->getItem('d20f64acc6e70b6079845f2fe357732929550ae1')->shouldBeCalled()->willReturn($item);
         $item->isHit()->willReturn(true);
@@ -233,6 +310,7 @@ class CachePluginSpec extends ObjectBehavior
 
         $request->getMethod()->willReturn('GET');
         $request->getUri()->willReturn('/');
+        $request->getBody()->shouldBeCalled();
 
         $request->withHeader(Argument::any(), Argument::any())->willReturn($request);
         $request->withHeader(Argument::any(), Argument::any())->willReturn($request);
