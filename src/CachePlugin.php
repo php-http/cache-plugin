@@ -9,6 +9,7 @@ use Psr\Cache\CacheItemInterface;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
@@ -34,6 +35,13 @@ final class CachePlugin implements Plugin
     private $config;
 
     /**
+     * Cache directives indicating if a response can not be cached.
+     *
+     * @var array
+     */
+    private $noCacheFlags = ['no-cache', 'private', 'no-store'];
+
+    /**
      * @param CacheItemPoolInterface $pool
      * @param StreamFactory          $streamFactory
      * @param array                  $config        {
@@ -45,7 +53,8 @@ final class CachePlugin implements Plugin
      *     @var int $cache_lifetime (seconds) To support serving a previous stale response when the server answers 304
      *              we have to store the cache for a longer time than the server originally says it is valid for.
      *              We store a cache item for $cache_lifetime + max age of the response.
-     *     @var array $methods list of request methods which can be cached.
+     *     @var array $methods list of request methods which can be cached
+     *     @var array $respect_response_cache_directives list of cache directives this plugin will respect while caching responses.
      * }
      */
     public function __construct(CacheItemPoolInterface $pool, StreamFactory $streamFactory, array $config = [])
@@ -53,9 +62,55 @@ final class CachePlugin implements Plugin
         $this->pool = $pool;
         $this->streamFactory = $streamFactory;
 
+        if (isset($config['respect_cache_headers']) && isset($config['respect_response_cache_directives'])) {
+            throw new \InvalidArgumentException(
+                'You can\'t provide config option "respect_cache_headers" and "respect_response_cache_directives". '.
+                'Use "respect_response_cache_directives" instead.'
+            );
+        }
+
         $optionsResolver = new OptionsResolver();
         $this->configureOptions($optionsResolver);
         $this->config = $optionsResolver->resolve($config);
+    }
+
+    /**
+     * This method will setup the cachePlugin in client cache mode. When using the client cache mode the plugin will
+     * cache responses with `private` cache directive.
+     *
+     * @param CacheItemPoolInterface $pool
+     * @param StreamFactory          $streamFactory
+     * @param array                  $config        For all possible config options see the constructor docs
+     *
+     * @return CachePlugin
+     */
+    public static function clientCache(CacheItemPoolInterface $pool, StreamFactory $streamFactory, array $config = [])
+    {
+        // Allow caching of private requests
+        if (isset($config['respect_response_cache_directives'])) {
+            $config['respect_response_cache_directives'][] = 'no-cache';
+            $config['respect_response_cache_directives'][] = 'max-age';
+            $config['respect_response_cache_directives'] = array_unique($config['respect_response_cache_directives']);
+        } else {
+            $config['respect_response_cache_directives'] = ['no-cache', 'max-age'];
+        }
+
+        return new self($pool, $streamFactory, $config);
+    }
+
+    /**
+     * This method will setup the cachePlugin in server cache mode. This is the default caching behavior it refuses to
+     * cache responses with the `private`or `no-cache` directives.
+     *
+     * @param CacheItemPoolInterface $pool
+     * @param StreamFactory          $streamFactory
+     * @param array                  $config        For all possible config options see the constructor docs
+     *
+     * @return CachePlugin
+     */
+    public static function serverCache(CacheItemPoolInterface $pool, StreamFactory $streamFactory, array $config = [])
+    {
+        return new self($pool, $streamFactory, $config);
     }
 
     /**
@@ -183,11 +238,12 @@ final class CachePlugin implements Plugin
         if (!in_array($response->getStatusCode(), [200, 203, 300, 301, 302, 404, 410])) {
             return false;
         }
-        if (!$this->config['respect_cache_headers']) {
-            return true;
-        }
-        if ($this->getCacheControlDirective($response, 'no-store') || $this->getCacheControlDirective($response, 'private')) {
-            return false;
+
+        $nocacheDirectives = array_intersect($this->config['respect_response_cache_directives'], $this->noCacheFlags);
+        foreach ($nocacheDirectives as $nocacheDirective) {
+            if ($this->getCacheControlDirective($response, $nocacheDirective)) {
+                return false;
+            }
         }
 
         return true;
@@ -242,7 +298,7 @@ final class CachePlugin implements Plugin
      */
     private function getMaxAge(ResponseInterface $response)
     {
-        if (!$this->config['respect_cache_headers']) {
+        if (!in_array('max-age', $this->config['respect_response_cache_directives'], true)) {
             return $this->config['default_ttl'];
         }
 
@@ -276,9 +332,11 @@ final class CachePlugin implements Plugin
         $resolver->setDefaults([
             'cache_lifetime' => 86400 * 30, // 30 days
             'default_ttl' => 0,
+            //Deprecated as of v1.3, to be removed in v2.0. Use respect_response_cache_directives instead
             'respect_cache_headers' => true,
             'hash_algo' => 'sha1',
             'methods' => ['GET', 'HEAD'],
+            'respect_response_cache_directives' => ['no-cache', 'private', 'max-age', 'no-store'],
         ]);
 
         $resolver->setAllowedTypes('cache_lifetime', ['int', 'null']);
@@ -291,6 +349,22 @@ final class CachePlugin implements Plugin
             $matches = preg_grep('/[^A-Z0-9!#$%&\'*\/+\-.^_`|~]/', $value);
 
             return empty($matches);
+        });
+
+        $resolver->setNormalizer('respect_cache_headers', function (Options $options, $value) {
+            if (null !== $value) {
+                @trigger_error('The option "respect_cache_headers" is deprecated since version 1.3 and will be removed in 2.0. Use "respect_response_cache_directives" instead.', E_USER_DEPRECATED);
+            }
+
+            return $value;
+        });
+
+        $resolver->setNormalizer('respect_response_cache_directives', function (Options $options, $value) {
+            if (false === $options['respect_cache_headers']) {
+                return [];
+            }
+
+            return $value;
         });
     }
 
