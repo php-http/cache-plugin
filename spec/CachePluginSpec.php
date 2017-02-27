@@ -351,6 +351,54 @@ class CachePluginSpec extends ObjectBehavior
         $this->handleRequest($request, $next, function () {});
     }
 
+    function it_caches_private_responses_when_allowed(
+        CacheItemPoolInterface $pool,
+        CacheItemInterface $item,
+        RequestInterface $request,
+        ResponseInterface $response,
+        StreamFactory $streamFactory,
+        StreamInterface $stream
+    ) {
+        $this->beConstructedThrough('clientCache', [$pool, $streamFactory, [
+            'default_ttl' => 60,
+            'cache_lifetime' => 1000,
+        ]]);
+
+        $httpBody = 'body';
+        $stream->__toString()->willReturn($httpBody);
+        $stream->isSeekable()->willReturn(true);
+        $stream->rewind()->shouldBeCalled();
+
+        $request->getMethod()->willReturn('GET');
+        $request->getUri()->willReturn('/');
+        $request->getBody()->shouldBeCalled();
+
+        $response->getStatusCode()->willReturn(200);
+        $response->getBody()->willReturn($stream);
+        $response->getHeader('Cache-Control')->willReturn(['private'])->shouldBeCalled();
+        $response->getHeader('Expires')->willReturn(array())->shouldBeCalled();
+        $response->getHeader('ETag')->willReturn(array())->shouldBeCalled();
+
+        $pool->getItem('d20f64acc6e70b6079845f2fe357732929550ae1')->shouldBeCalled()->willReturn($item);
+        $item->isHit()->willReturn(false);
+        $item->expiresAfter(1060)->willReturn($item)->shouldBeCalled();
+
+        $item->set($this->getCacheItemMatcher([
+            'response' => $response->getWrappedObject(),
+            'body' => $httpBody,
+            'expiresAt' => 0,
+            'createdAt' => 0,
+            'etag' => []
+        ]))->willReturn($item)->shouldBeCalled();
+        $pool->save(Argument::any())->shouldBeCalled();
+
+        $next = function (RequestInterface $request) use ($response) {
+            return new FulfilledPromise($response->getWrappedObject());
+        };
+
+        $this->handleRequest($request, $next, function () {});
+    }
+
 
     /**
      * Private function to match cache item data.
