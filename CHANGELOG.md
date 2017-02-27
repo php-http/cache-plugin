@@ -3,18 +3,19 @@
 ## 1.3.0 - unreleased
 ### Added
 
-- New `methods` setting which allows to configure the request methods which can be cached.
-- New `respect_response_cache_directives` config setting to define specific cache directives to respect when handling responses.
+- New `methods` option which allows to configure the request methods which can be cached.
+- New `respect_response_cache_directives` option to define specific cache directives to respect when handling responses.
 - Introduced `CachePlugin::clientCache` and `CachePlugin::serverCache` factory methods to easily setup the plugin with 
-the correct config settigns for each usecase.
+  the correct config settigns for each usecase.
 
 ### Changed
 
-- The `no-cache` directive is now respected by the plugin and will not cache the response
+- The `no-cache` directive is now respected by the plugin and will not cache the response. If you need the previous behaviour, configure `respect_response_cache_directives`.
 
 ### Deprecated
 
 - The `respect_cache_headers` option is deprecated and will be removed in 2.0. This option is replaced by the new `respect_response_cache_directives` option.
+  If you had set `respect_cache_headers` to `false`, set the directives to `[]` to ignore all directives.
 
 ## 1.2.0 - 2016-08-16
 
