@@ -9,6 +9,7 @@ use Psr\Cache\CacheItemInterface;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use RewindStreamException;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -379,7 +380,15 @@ final class CachePlugin implements Plugin
 
         /** @var ResponseInterface $response */
         $response = $data['response'];
-        $response = $response->withBody($this->streamFactory->createStream($data['body']));
+        $stream = $this->streamFactory->createStream($data['body']);
+
+        try {
+            $stream->rewind();
+        } catch (\Exception $e) {
+            throw new RewindStreamException('Cannot rewind stream.', 0, $e);
+        }
+
+        $response = $response->withBody($stream);
 
         return $response;
     }
