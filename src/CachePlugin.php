@@ -347,6 +347,7 @@ final class CachePlugin implements Plugin
         $resolver->setAllowedValues('methods', function ($value) {
             /* RFC7230 sections 3.1.1 and 3.2.6 except limited to uppercase characters. */
             $matches = preg_grep('/[^A-Z0-9!#$%&\'*+\-.^_`|~]/', $value);
+
             return empty($matches);
         });
 
