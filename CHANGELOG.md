@@ -1,6 +1,6 @@
 # Change Log
 
-## 1.3.0 - 2017-03-23
+## 1.3.0 - 2017-03-27
 
 ### Added
 
@@ -12,6 +12,7 @@
 ### Changed
 
 - The `no-cache` directive is now respected by the plugin and will not cache the response. If you need the previous behaviour, configure `respect_response_cache_directives`.
+- We always rewind the stream after loading response from cache. 
 
 ### Deprecated
 
