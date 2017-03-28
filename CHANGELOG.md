@@ -1,6 +1,7 @@
 # Change Log
 
-## 1.3.0 - unreleased
+## 1.3.0 - 2017-03-28
+
 ### Added
 
 - New `methods` option which allows to configure the request methods which can be cached.
@@ -11,11 +12,13 @@
 ### Changed
 
 - The `no-cache` directive is now respected by the plugin and will not cache the response. If you need the previous behaviour, configure `respect_response_cache_directives`.
+- We always rewind the stream after loading response from cache. 
 
 ### Deprecated
 
 - The `respect_cache_headers` option is deprecated and will be removed in 2.0. This option is replaced by the new `respect_response_cache_directives` option.
   If you had set `respect_cache_headers` to `false`, set the directives to `[]` to ignore all directives.
+
 
 ## 1.2.0 - 2016-08-16
 
