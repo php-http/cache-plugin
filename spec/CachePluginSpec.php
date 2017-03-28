@@ -1,6 +1,6 @@
 <?php
 
-namespace spec\Http\Client\Common\Plugin;
+namespace spec\Http\Client\Common;
 
 use Prophecy\Argument;
 use Http\Message\StreamFactory;
@@ -24,7 +24,7 @@ class CachePluginSpec extends ObjectBehavior
 
     function it_is_initializable(CacheItemPoolInterface $pool)
     {
-        $this->shouldHaveType('Http\Client\Common\Plugin\CachePlugin');
+        $this->shouldHaveType('Http\Client\Common\CachePlugin');
     }
 
     function it_is_a_plugin()

@@ -1,6 +1,6 @@
 <?php
 
-namespace Http\Client\Common;
+namespace Http\Client\Common\Exception;
 
 use Http\Client\Exception;
 
