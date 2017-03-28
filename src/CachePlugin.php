@@ -3,6 +3,7 @@
 namespace Http\Client\Common\Plugin;
 
 use Http\Client\Common\Plugin;
+use Http\Client\Common\Plugin\Exception\RewindStreamException;
 use Http\Message\StreamFactory;
 use Http\Promise\FulfilledPromise;
 use Psr\Cache\CacheItemInterface;
@@ -379,7 +380,15 @@ final class CachePlugin implements Plugin
 
         /** @var ResponseInterface $response */
         $response = $data['response'];
-        $response = $response->withBody($this->streamFactory->createStream($data['body']));
+        $stream = $this->streamFactory->createStream($data['body']);
+
+        try {
+            $stream->rewind();
+        } catch (\Exception $e) {
+            throw new RewindStreamException('Cannot rewind stream.', 0, $e);
+        }
+
+        $response = $response->withBody($stream);
 
         return $response;
     }
