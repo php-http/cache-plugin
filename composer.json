@@ -23,12 +23,12 @@
     },
     "autoload": {
         "psr-4": {
-            "Http\\Client\\Common\\": "src/"
+            "Http\\Client\\Common\\Plugin\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "spec\\Http\\Client\\Common\\": "spec/"
+            "spec\\Http\\Client\\Common\\Plugin\\": "spec/"
         }
     },
     "scripts": {

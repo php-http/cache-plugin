@@ -1,8 +1,9 @@
 <?php
 
-namespace Http\Client\Common;
+namespace Http\Client\Common\Plugin;
 
-use Http\Client\Common\Exception\RewindStreamException;
+use Http\Client\Common\Plugin;
+use Http\Client\Common\Plugin\Exception\RewindStreamException;
 use Http\Message\StreamFactory;
 use Http\Promise\FulfilledPromise;
 use Psr\Cache\CacheItemInterface;
