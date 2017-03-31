@@ -57,7 +57,7 @@ final class CachePlugin implements Plugin
      *              we have to store the cache for a longer time than the server originally says it is valid for.
      *              We store a cache item for $cache_lifetime + max age of the response.
      *     @var array $methods list of request methods which can be cached
-     *     @var array $respect_response_cache_directives list of cache directives this plugin will respect while caching responses.
+     *     @var array $respect_response_cache_directives list of cache directives this plugin will respect while caching responses
      *     @var CacheKeyGenerator $cache_key_generator a class to generate the cache key. Defaults to RequestLineAndBodyGenerator
      * }
      */
