@@ -349,7 +349,7 @@ final class CachePlugin implements Plugin
         $resolver->setAllowedTypes('default_ttl', ['int', 'null']);
         $resolver->setAllowedTypes('respect_cache_headers', 'bool');
         $resolver->setAllowedTypes('methods', 'array');
-        $resolver->setAllowedTypes('cache_key_generator', ['null', 'Http\Client\Common\Plugin\Generator\CacheKeyGenerator']);
+        $resolver->setAllowedTypes('cache_key_generator', ['null', 'Http\Client\Common\Plugin\Cache\Generator\CacheKeyGenerator']);
         $resolver->setAllowedValues('hash_algo', hash_algos());
         $resolver->setAllowedValues('methods', function ($value) {
             /* RFC7230 sections 3.1.1 and 3.2.6 except limited to uppercase characters. */
