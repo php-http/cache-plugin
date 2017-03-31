@@ -9,7 +9,7 @@ use Psr\Http\Message\RequestInterface;
  *
  * @author Tobias Nyholm <tobias.nyholm@gmail.com>
  */
-class SimpleGenerator implements CacheKeyGenerator
+final class SimpleGenerator implements CacheKeyGenerator
 {
     public function generate(RequestInterface $request)
     {
