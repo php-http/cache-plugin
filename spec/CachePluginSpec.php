@@ -2,7 +2,7 @@
 
 namespace spec\Http\Client\Common\Plugin;
 
-use Http\Client\Common\Plugin\Generator\RequestLineAndBodyGenerator;
+use Http\Client\Common\Plugin\Cache\Generator\SimpleGenerator;
 use Prophecy\Argument;
 use Http\Message\StreamFactory;
 use Http\Promise\FulfilledPromise;
@@ -408,7 +408,7 @@ class CachePluginSpec extends ObjectBehavior
         RequestInterface $request,
         ResponseInterface $response,
         StreamInterface $stream,
-        RequestLineAndBodyGenerator $generator
+        SimpleGenerator $generator
     ) {
         $this->beConstructedThrough('clientCache', [$pool, $streamFactory, [
             'cache_key_generator' => $generator,
