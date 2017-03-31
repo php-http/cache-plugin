@@ -2,6 +2,7 @@
 
 namespace spec\Http\Client\Common\Plugin;
 
+use Http\Client\Common\Plugin\Generator\RequestLineAndBodyGenerator;
 use Prophecy\Argument;
 use Http\Message\StreamFactory;
 use Http\Promise\FulfilledPromise;
@@ -391,6 +392,47 @@ class CachePluginSpec extends ObjectBehavior
             'etag' => []
         ]))->willReturn($item)->shouldBeCalled();
         $pool->save(Argument::any())->shouldBeCalled();
+
+        $next = function (RequestInterface $request) use ($response) {
+            return new FulfilledPromise($response->getWrappedObject());
+        };
+
+        $this->handleRequest($request, $next, function () {});
+    }
+
+
+    function it_can_be_initialized_with_custom_cache_key_generator(
+        CacheItemPoolInterface $pool,
+        CacheItemInterface $item,
+        StreamFactory $streamFactory,
+        RequestInterface $request,
+        ResponseInterface $response,
+        StreamInterface $stream,
+        RequestLineAndBodyGenerator $generator
+    ) {
+        $this->beConstructedThrough('clientCache', [$pool, $streamFactory, [
+            'cache_key_generator' => $generator,
+        ]]);
+
+        $generator->generate($request)->shouldBeCalled()->willReturn('foo');
+
+        $stream->isSeekable()->willReturn(true);
+        $stream->rewind()->shouldBeCalled();
+        $streamFactory->createStream(Argument::any())->willReturn($stream);
+
+        $request->getMethod()->willReturn('GET');
+        $request->getUri()->willReturn('/');
+        $response->withBody(Argument::any())->willReturn($response);
+
+        $pool->getItem(Argument::any())->shouldBeCalled()->willReturn($item);
+        $item->isHit()->willReturn(true);
+        $item->get()->willReturn([
+            'response' => $response->getWrappedObject(),
+            'body' => 'body',
+            'expiresAt' => null,
+            'createdAt' => 0,
+            'etag' => []
+        ]);
 
         $next = function (RequestInterface $request) use ($response) {
             return new FulfilledPromise($response->getWrappedObject());
