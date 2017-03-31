@@ -1,20 +1,20 @@
 <?php
 
-namespace spec\Http\Client\Common\Plugin\Generator;
+namespace spec\Http\Client\Common\Plugin\Cache\Generator;
 
 use PhpSpec\ObjectBehavior;
 use Psr\Http\Message\RequestInterface;
 
-class RequestLineAndBodyGeneratorSpec extends ObjectBehavior
+class SimpleGeneratorSpec extends ObjectBehavior
 {
     public function it_is_initializable()
     {
-        $this->shouldHaveType('Http\Client\Common\Plugin\Generator\RequestLineAndBodyGenerator');
+        $this->shouldHaveType('Http\Client\Common\Plugin\Cache\Generator\SimpleGenerator');
     }
 
     public function it_is_a_key_generator()
     {
-        $this->shouldImplement('Http\Client\Common\Plugin\Generator\CacheKeyGenerator');
+        $this->shouldImplement('Http\Client\Common\Plugin\Cache\Generator\CacheKeyGenerator');
     }
 
     public function it_generates_cache_from_request(RequestInterface $request)

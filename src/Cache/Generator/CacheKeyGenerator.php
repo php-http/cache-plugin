@@ -1,6 +1,6 @@
 <?php
 
-namespace Http\Client\Common\Plugin\Generator;
+namespace Http\Client\Common\Plugin\Cache\Generator;
 
 use Psr\Http\Message\RequestInterface;
 

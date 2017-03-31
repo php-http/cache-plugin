@@ -1,6 +1,6 @@
 <?php
 
-namespace Http\Client\Common\Plugin\Generator;
+namespace Http\Client\Common\Plugin\Cache\Generator;
 
 use Psr\Http\Message\RequestInterface;
 
@@ -9,7 +9,7 @@ use Psr\Http\Message\RequestInterface;
  *
  * @author Tobias Nyholm <tobias.nyholm@gmail.com>
  */
-class RequestLineAndBodyGenerator implements CacheKeyGenerator
+class SimpleGenerator implements CacheKeyGenerator
 {
     public function generate(RequestInterface $request)
     {

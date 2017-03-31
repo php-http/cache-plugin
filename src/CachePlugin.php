@@ -4,8 +4,8 @@ namespace Http\Client\Common\Plugin;
 
 use Http\Client\Common\Plugin;
 use Http\Client\Common\Plugin\Exception\RewindStreamException;
-use Http\Client\Common\Plugin\Generator\CacheKeyGenerator;
-use Http\Client\Common\Plugin\Generator\RequestLineAndBodyGenerator;
+use Http\Client\Common\Plugin\Cache\Generator\CacheKeyGenerator;
+use Http\Client\Common\Plugin\Cache\Generator\SimpleGenerator;
 use Http\Message\StreamFactory;
 use Http\Promise\FulfilledPromise;
 use Psr\Cache\CacheItemInterface;
@@ -76,6 +76,10 @@ final class CachePlugin implements Plugin
         $optionsResolver = new OptionsResolver();
         $this->configureOptions($optionsResolver);
         $this->config = $optionsResolver->resolve($config);
+
+        if (null === $this->config['cache_key_generator']) {
+            $this->config['cache_key_generator'] = new SimpleGenerator();
+        }
     }
 
     /**
@@ -285,10 +289,6 @@ final class CachePlugin implements Plugin
      */
     private function createCacheKey(RequestInterface $request)
     {
-        if (null === $this->config['cache_key_generator']) {
-            $this->config['cache_key_generator'] = new RequestLineAndBodyGenerator();
-        }
-
         $key = $this->config['cache_key_generator']->generate($request);
 
         return hash($this->config['hash_algo'], $key);
