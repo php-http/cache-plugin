@@ -5,14 +5,14 @@ namespace Http\Client\Common\Plugin\Cache\Generator;
 use Psr\Http\Message\RequestInterface;
 
 /**
- * Generate a cache key and specify what headers you want to vary on.
+ * Generate a cache key by specify what headers you want to vary on.
  *
  * @author Tobias Nyholm <tobias.nyholm@gmail.com>
  */
-class VaryGenerator implements CacheKeyGenerator
+class HeaderHashGenerator implements CacheKeyGenerator
 {
     /**
-     * The header names we should vary on.
+     * The header names we should take into account when creating the cache key.
      *
      * @var array
      */
