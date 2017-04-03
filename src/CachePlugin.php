@@ -4,6 +4,8 @@ namespace Http\Client\Common\Plugin;
 
 use Http\Client\Common\Plugin;
 use Http\Client\Common\Plugin\Exception\RewindStreamException;
+use Http\Client\Common\Plugin\Cache\Generator\CacheKeyGenerator;
+use Http\Client\Common\Plugin\Cache\Generator\SimpleGenerator;
 use Http\Message\StreamFactory;
 use Http\Promise\FulfilledPromise;
 use Psr\Cache\CacheItemInterface;
@@ -55,7 +57,8 @@ final class CachePlugin implements Plugin
      *              we have to store the cache for a longer time than the server originally says it is valid for.
      *              We store a cache item for $cache_lifetime + max age of the response.
      *     @var array $methods list of request methods which can be cached
-     *     @var array $respect_response_cache_directives list of cache directives this plugin will respect while caching responses.
+     *     @var array $respect_response_cache_directives list of cache directives this plugin will respect while caching responses
+     *     @var CacheKeyGenerator $cache_key_generator a class to generate the cache key. Defaults to SimpleGenerator
      * }
      */
     public function __construct(CacheItemPoolInterface $pool, StreamFactory $streamFactory, array $config = [])
@@ -73,6 +76,10 @@ final class CachePlugin implements Plugin
         $optionsResolver = new OptionsResolver();
         $this->configureOptions($optionsResolver);
         $this->config = $optionsResolver->resolve($config);
+
+        if (null === $this->config['cache_key_generator']) {
+            $this->config['cache_key_generator'] = new SimpleGenerator();
+        }
     }
 
     /**
@@ -282,12 +289,9 @@ final class CachePlugin implements Plugin
      */
     private function createCacheKey(RequestInterface $request)
     {
-        $body = (string) $request->getBody();
-        if (!empty($body)) {
-            $body = ' '.$body;
-        }
+        $key = $this->config['cache_key_generator']->generate($request);
 
-        return hash($this->config['hash_algo'], $request->getMethod().' '.$request->getUri().$body);
+        return hash($this->config['hash_algo'], $key);
     }
 
     /**
@@ -338,12 +342,14 @@ final class CachePlugin implements Plugin
             'hash_algo' => 'sha1',
             'methods' => ['GET', 'HEAD'],
             'respect_response_cache_directives' => ['no-cache', 'private', 'max-age', 'no-store'],
+            'cache_key_generator' => null,
         ]);
 
         $resolver->setAllowedTypes('cache_lifetime', ['int', 'null']);
         $resolver->setAllowedTypes('default_ttl', ['int', 'null']);
         $resolver->setAllowedTypes('respect_cache_headers', 'bool');
         $resolver->setAllowedTypes('methods', 'array');
+        $resolver->setAllowedTypes('cache_key_generator', ['null', 'Http\Client\Common\Plugin\Cache\Generator\CacheKeyGenerator']);
         $resolver->setAllowedValues('hash_algo', hash_algos());
         $resolver->setAllowedValues('methods', function ($value) {
             /* RFC7230 sections 3.1.1 and 3.2.6 except limited to uppercase characters. */
