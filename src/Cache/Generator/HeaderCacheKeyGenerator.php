@@ -9,7 +9,7 @@ use Psr\Http\Message\RequestInterface;
  *
  * @author Tobias Nyholm <tobias.nyholm@gmail.com>
  */
-class HeaderHashGenerator implements CacheKeyGenerator
+class HeaderCacheKeyGenerator implements CacheKeyGenerator
 {
     /**
      * The header names we should take into account when creating the cache key.

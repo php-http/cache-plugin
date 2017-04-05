@@ -5,7 +5,7 @@ namespace spec\Http\Client\Common\Plugin\Cache\Generator;
 use PhpSpec\ObjectBehavior;
 use Psr\Http\Message\RequestInterface;
 
-class HeaderHashGeneratorSpec extends ObjectBehavior
+class HeaderCacheKeyGeneratorSpec extends ObjectBehavior
 {
     public function let()
     {
@@ -14,7 +14,7 @@ class HeaderHashGeneratorSpec extends ObjectBehavior
 
     public function it_is_initializable()
     {
-        $this->shouldHaveType('Http\Client\Common\Plugin\Cache\Generator\HeaderHashGenerator');
+        $this->shouldHaveType('Http\Client\Common\Plugin\Cache\Generator\HeaderCacheKeyGenerator');
     }
 
     public function it_is_a_key_generator()
