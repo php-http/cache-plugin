@@ -338,7 +338,7 @@ final class CachePlugin implements Plugin
             'cache_lifetime' => 86400 * 30, // 30 days
             'default_ttl' => 0,
             //Deprecated as of v1.3, to be removed in v2.0. Use respect_response_cache_directives instead
-            'respect_cache_headers' => true,
+            'respect_cache_headers' => null,
             'hash_algo' => 'sha1',
             'methods' => ['GET', 'HEAD'],
             'respect_response_cache_directives' => ['no-cache', 'private', 'max-age', 'no-store'],
@@ -347,7 +347,7 @@ final class CachePlugin implements Plugin
 
         $resolver->setAllowedTypes('cache_lifetime', ['int', 'null']);
         $resolver->setAllowedTypes('default_ttl', ['int', 'null']);
-        $resolver->setAllowedTypes('respect_cache_headers', 'bool');
+        $resolver->setAllowedTypes('respect_cache_headers', ['bool', 'null']);
         $resolver->setAllowedTypes('methods', 'array');
         $resolver->setAllowedTypes('cache_key_generator', ['null', 'Http\Client\Common\Plugin\Cache\Generator\CacheKeyGenerator']);
         $resolver->setAllowedValues('hash_algo', hash_algos());
@@ -363,7 +363,7 @@ final class CachePlugin implements Plugin
                 @trigger_error('The option "respect_cache_headers" is deprecated since version 1.3 and will be removed in 2.0. Use "respect_response_cache_directives" instead.', E_USER_DEPRECATED);
             }
 
-            return $value;
+            return null === $value ? true : $value;
         });
 
         $resolver->setNormalizer('respect_response_cache_directives', function (Options $options, $value) {
