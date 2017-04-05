@@ -33,6 +33,6 @@ class HeaderCacheKeyGenerator implements CacheKeyGenerator
             $concatenatedHeaders[] = sprintf(' %s:"%s"', $headerName, $request->getHeaderLine($headerName));
         }
 
-        return $request->getMethod().' '.$request->getUri().implode('', $concatenatedHeaders);
+        return $request->getMethod().' '.$request->getUri().implode('', $concatenatedHeaders).' '.$request->getBody();
     }
 }
