@@ -5,7 +5,7 @@ namespace Http\Client\Common\Plugin\Cache\Generator;
 use Psr\Http\Message\RequestInterface;
 
 /**
- * Generate a cache key by specify what headers you want to vary on.
+ * Generate a cache key by using HTTP headers.
  *
  * @author Tobias Nyholm <tobias.nyholm@gmail.com>
  */
