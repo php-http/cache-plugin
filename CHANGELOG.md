@@ -1,5 +1,16 @@
 # Change Log
 
+## 1.4.0 - 2017-04-05
+
+### Added 
+
+- `CacheKeyGenerator` interface that allow you to configure how the PSR-6 cache key is created. There are two implementations
+of this interface: `SimpleGenerator` (default) and `HeaderCacheKeyGenerator`.
+
+### Fixed
+
+- Issue where deprecation warning always was triggered. Not it is just triggered if `respect_cache_headers` is used. 
+
 ## 1.3.0 - 2017-03-28
 
 ### Added
