@@ -5,11 +5,11 @@ namespace Http\Client\Common\Plugin\Cache\Generator;
 use Psr\Http\Message\RequestInterface;
 
 /**
- * Generate a cache key by specify what headers you want to vary on.
+ * Generate a cache key by vary on Cookie and Authorization header.
  *
  * @author Tobias Nyholm <tobias.nyholm@gmail.com>
  */
-class HeaderHashGenerator implements CacheKeyGenerator
+class SharedCacheKeyGenerator implements CacheKeyGenerator
 {
     /**
      * The header names we should take into account when creating the cache key.
@@ -19,9 +19,9 @@ class HeaderHashGenerator implements CacheKeyGenerator
     private $headerNames;
 
     /**
-     * @param $headerNames
+     * @param array $headerNames defaults to Authorization and Cookie
      */
-    public function __construct(array $headerNames)
+    public function __construct(array $headerNames = ['Authorization', 'Cookie'])
     {
         $this->headerNames = $headerNames;
     }
