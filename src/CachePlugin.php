@@ -435,10 +435,6 @@ final class CachePlugin implements Plugin
             return;
         }
 
-        if (!is_array($data['etag'])) {
-            return $data['etag'];
-        }
-
         foreach ($data['etag'] as $etag) {
             if (!empty($etag)) {
                 return $etag;
