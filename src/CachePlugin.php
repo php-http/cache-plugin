@@ -139,7 +139,7 @@ final class CachePlugin implements Plugin
         if ($cacheItem->isHit()) {
             $data = $cacheItem->get();
             // The array_key_exists() is to be removed in 2.0.
-            if (array_key_exists('expiresAt', $data) && ($data['expiresAt'] === null || time() < $data['expiresAt'])) {
+            if (array_key_exists('expiresAt', $data) && (null === $data['expiresAt'] || time() < $data['expiresAt'])) {
                 // This item is still valid according to previous cache headers
                 return new FulfilledPromise($this->createResponseFromCacheItem($cacheItem));
             }
@@ -210,7 +210,7 @@ final class CachePlugin implements Plugin
      */
     private function calculateCacheItemExpiresAfter($maxAge)
     {
-        if ($this->config['cache_lifetime'] === null && $maxAge === null) {
+        if (null === $this->config['cache_lifetime'] && null === $maxAge) {
             return;
         }
 
@@ -227,7 +227,7 @@ final class CachePlugin implements Plugin
      */
     private function calculateResponseExpiresAt($maxAge)
     {
-        if ($maxAge === null) {
+        if (null === $maxAge) {
             return;
         }
 
