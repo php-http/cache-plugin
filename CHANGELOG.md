@@ -1,5 +1,15 @@
 # Change Log
 
+## 1.5.0 - 2017-11-29
+
+### Added
+
+* Support for Symfony 4
+
+### Changed
+
+* Removed check if etag is a string. Etag can never be a string, it is always an array. 
+
 ## 1.4.0 - 2017-04-05
 
 ### Added 
