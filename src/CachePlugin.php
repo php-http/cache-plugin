@@ -457,7 +457,7 @@ final class CachePlugin implements Plugin
      * Call the reponse mutator, if one is set.
      *
      * @param ResponseInterface $response
-     * @param bool $cacheHit
+     * @param bool              $cacheHit
      *
      * @return ResponseInterface
      */

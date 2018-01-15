@@ -26,7 +26,7 @@ class AddHeaderResponseMutator implements ResponseMutator
      * Mutate the response depending on the cache status.
      *
      * @param ResponseInterface $response
-     * @param bool $cacheHit
+     * @param bool              $cacheHit
      *
      * @return string
      */
