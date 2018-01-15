@@ -6,6 +6,7 @@ use Http\Client\Common\Plugin;
 use Http\Client\Common\Plugin\Exception\RewindStreamException;
 use Http\Client\Common\Plugin\Cache\Generator\CacheKeyGenerator;
 use Http\Client\Common\Plugin\Cache\Generator\SimpleGenerator;
+use Http\Client\Common\Plugin\Cache\Mutator\ResponseMutator;
 use Http\Message\StreamFactory;
 use Http\Promise\FulfilledPromise;
 use Psr\Cache\CacheItemInterface;
@@ -59,6 +60,7 @@ final class CachePlugin implements Plugin
      *     @var array $methods list of request methods which can be cached
      *     @var array $respect_response_cache_directives list of cache directives this plugin will respect while caching responses
      *     @var CacheKeyGenerator $cache_key_generator an object to generate the cache key. Defaults to a new instance of SimpleGenerator
+     *     @var ResponseMutator $response_mutator an object to mutate the response based on the results of the cache check. Defaults to nothing
      * }
      */
     public function __construct(CacheItemPoolInterface $pool, StreamFactory $streamFactory, array $config = [])
@@ -129,7 +131,11 @@ final class CachePlugin implements Plugin
         $method = strtoupper($request->getMethod());
         // if the request not is cachable, move to $next
         if (!in_array($method, $this->config['methods'])) {
-            return $next($request);
+            return $next($request)->then(function (ResponseInterface $response) {
+                $response = $this->handleResponseMutator($response, false);
+
+                return $response;
+            });
         }
 
         // If we can cache the request
@@ -141,7 +147,10 @@ final class CachePlugin implements Plugin
             // The array_key_exists() is to be removed in 2.0.
             if (array_key_exists('expiresAt', $data) && (null === $data['expiresAt'] || time() < $data['expiresAt'])) {
                 // This item is still valid according to previous cache headers
-                return new FulfilledPromise($this->createResponseFromCacheItem($cacheItem));
+                $response = $this->createResponseFromCacheItem($cacheItem);
+                $response = $this->handleResponseMutator($response, true);
+
+                return new FulfilledPromise($response);
             }
 
             // Add headers to ask the server if this cache is still valid
@@ -161,7 +170,7 @@ final class CachePlugin implements Plugin
                      * We do not have the item in cache. This plugin did not add If-Modified-Since
                      * or If-None-Match headers. Return the response from server.
                      */
-                    return $response;
+                    return $$this->handleResponseMutator($response, false);
                 }
 
                 // The cached response we have is still valid
@@ -171,7 +180,7 @@ final class CachePlugin implements Plugin
                 $cacheItem->set($data)->expiresAfter($this->calculateCacheItemExpiresAfter($maxAge));
                 $this->pool->save($cacheItem);
 
-                return $this->createResponseFromCacheItem($cacheItem);
+                return $this->handleResponseMutator($this->createResponseFromCacheItem($cacheItem), true);
             }
 
             if ($this->isCacheable($response)) {
@@ -196,7 +205,7 @@ final class CachePlugin implements Plugin
                 $this->pool->save($cacheItem);
             }
 
-            return $response;
+            return $this->handleResponseMutator($response, false);
         });
     }
 
@@ -343,6 +352,7 @@ final class CachePlugin implements Plugin
             'methods' => ['GET', 'HEAD'],
             'respect_response_cache_directives' => ['no-cache', 'private', 'max-age', 'no-store'],
             'cache_key_generator' => null,
+            'response_mutator' => null,
         ]);
 
         $resolver->setAllowedTypes('cache_lifetime', ['int', 'null']);
@@ -357,6 +367,7 @@ final class CachePlugin implements Plugin
 
             return empty($matches);
         });
+        $resolver->setAllowedTypes('response_mutator', ['null', 'Http\Client\Common\Plugin\Cache\Mutator\ResponseMutator']);
 
         $resolver->setNormalizer('respect_cache_headers', function (Options $options, $value) {
             if (null !== $value) {
@@ -440,5 +451,22 @@ final class CachePlugin implements Plugin
                 return $etag;
             }
         }
+    }
+
+    /**
+     * Call the reponse mutator, if one is set.
+     *
+     * @param ResponseInterface $response
+     * @param bool $cacheHit
+     *
+     * @return ResponseInterface
+     */
+    private function handleResponseMutator(ResponseInterface $response, $cacheHit)
+    {
+        if (null !== $this->config['response_mutator']) {
+            $response = $this->config['response_mutator']->mutate($response, $cacheHit);
+        }
+
+        return $response;
     }
 }
