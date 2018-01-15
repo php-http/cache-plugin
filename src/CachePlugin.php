@@ -131,8 +131,8 @@ final class CachePlugin implements Plugin
         $method = strtoupper($request->getMethod());
         // if the request not is cachable, move to $next
         if (!in_array($method, $this->config['methods'])) {
-            return $next($request)->then(function (ResponseInterface $response) {
-                $response = $this->handleResponseMutator($response, false);
+            return $next($request)->then(function (ResponseInterface $response) use ($request) {
+                $response = $this->handleResponseMutator($request, $response, false);
 
                 return $response;
             });
@@ -148,7 +148,7 @@ final class CachePlugin implements Plugin
             if (array_key_exists('expiresAt', $data) && (null === $data['expiresAt'] || time() < $data['expiresAt'])) {
                 // This item is still valid according to previous cache headers
                 $response = $this->createResponseFromCacheItem($cacheItem);
-                $response = $this->handleResponseMutator($response, true);
+                $response = $this->handleResponseMutator($request, $response, true);
 
                 return new FulfilledPromise($response);
             }
@@ -163,14 +163,14 @@ final class CachePlugin implements Plugin
             }
         }
 
-        return $next($request)->then(function (ResponseInterface $response) use ($cacheItem) {
+        return $next($request)->then(function (ResponseInterface $response) use ($request, $cacheItem) {
             if (304 === $response->getStatusCode()) {
                 if (!$cacheItem->isHit()) {
                     /*
                      * We do not have the item in cache. This plugin did not add If-Modified-Since
                      * or If-None-Match headers. Return the response from server.
                      */
-                    return $$this->handleResponseMutator($response, false);
+                    return $this->handleResponseMutator($request, $response, false);
                 }
 
                 // The cached response we have is still valid
@@ -180,7 +180,7 @@ final class CachePlugin implements Plugin
                 $cacheItem->set($data)->expiresAfter($this->calculateCacheItemExpiresAfter($maxAge));
                 $this->pool->save($cacheItem);
 
-                return $this->handleResponseMutator($this->createResponseFromCacheItem($cacheItem), true);
+                return $this->handleResponseMutator($request, $this->createResponseFromCacheItem($cacheItem), true);
             }
 
             if ($this->isCacheable($response)) {
@@ -205,7 +205,7 @@ final class CachePlugin implements Plugin
                 $this->pool->save($cacheItem);
             }
 
-            return $this->handleResponseMutator($response, false);
+            return $this->handleResponseMutator($request, $response, false);
         });
     }
 
@@ -456,15 +456,16 @@ final class CachePlugin implements Plugin
     /**
      * Call the reponse mutator, if one is set.
      *
+     * @param RequestInterface  $request
      * @param ResponseInterface $response
      * @param bool              $cacheHit
      *
      * @return ResponseInterface
      */
-    private function handleResponseMutator(ResponseInterface $response, $cacheHit)
+    private function handleResponseMutator(RequestInterface $request, ResponseInterface $response, $cacheHit)
     {
         if (null !== $this->config['response_mutator']) {
-            $response = $this->config['response_mutator']->mutate($response, $cacheHit);
+            $response = $this->config['response_mutator']->mutate($request, $response, $cacheHit);
         }
 
         return $response;

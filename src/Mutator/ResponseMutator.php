@@ -2,6 +2,7 @@
 
 namespace Http\Client\Common\Plugin\Cache\Mutator;
 
+use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
 /**
@@ -14,10 +15,11 @@ interface ResponseMutator
     /**
      * Mutate the response depending on the cache status.
      *
+     * @param RequestInterface  $request
      * @param ResponseInterface $response
      * @param bool              $cacheHit
      *
      * @return string
      */
-    public function mutate(ResponseInterface $response, $cacheHit);
+    public function mutate(RequestInterface $request, ResponseInterface $response, $cacheHit);
 }

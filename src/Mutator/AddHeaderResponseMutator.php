@@ -2,6 +2,7 @@
 
 namespace Http\Client\Common\Plugin\Cache\Mutator;
 
+use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
 /**
@@ -30,7 +31,7 @@ class AddHeaderResponseMutator implements ResponseMutator
      *
      * @return string
      */
-    public function mutate(ResponseInterface $response, $cacheHit)
+    public function mutate(RequestInterface $request, ResponseInterface $response, $cacheHit)
     {
         return $response->withHeader($this->headerName, $cacheHit);
     }
