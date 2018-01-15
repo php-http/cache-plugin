@@ -17,7 +17,7 @@ class AddHeaderResponseMutator implements ResponseMutator
     /**
      * @param string $headerName
      */
-    public function __construct($headerName)
+    public function __construct($headerName = 'X-From-Php-Http-Cache')
     {
         $this->headerName = $headerName;
     }
