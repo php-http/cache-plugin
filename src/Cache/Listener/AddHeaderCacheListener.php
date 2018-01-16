@@ -1,17 +1,17 @@
 <?php
 
-namespace Http\Client\Common\Plugin\Cache\Mutator;
+namespace Http\Client\Common\Plugin\Cache\Listener;
 
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Cache\CacheItemPoolInterface;
 
 /**
- * Adds a header if the response came from cache.
+ * Adds a header indicating if the response came from cache.
  *
  * @author Iain Connor <iain.connor@priceline.com>
  */
-class AddHeaderResponseMutator implements ResponseMutator
+class AddHeaderCacheListener implements CacheListener
 {
     /** @var string */
     private $headerName;
@@ -25,16 +25,17 @@ class AddHeaderResponseMutator implements ResponseMutator
     }
 
     /**
-     * Mutate the response depending on the cache status.
+     * Called before the cache plugin returns the response, with information on whether that response came from cache.
      *
      * @param RequestInterface        $request
      * @param ResponseInterface       $response
-     * @param bool                    $cacheHit
+     * @param bool                    $fromCache Whether the `$response` was from the cache or not.
+     *                                           Note that checking `$cacheItem->isHit()` is not sufficent to determine this.
      * @param CacheItemInterface|null $cacheItem
      *
      * @return string
      */
-    public function mutate(RequestInterface $request, ResponseInterface $response, $cacheHit, CacheItemInterface $cacheItem)
+    public function onCacheResponse(RequestInterface $request, ResponseInterface $response, $fromCache, CacheItemInterface $cacheItem)
     {
         return $response->withHeader($this->headerName, $cacheHit ? 'HIT' : 'MISS');
     }
