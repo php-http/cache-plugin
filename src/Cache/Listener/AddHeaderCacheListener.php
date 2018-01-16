@@ -37,6 +37,6 @@ class AddHeaderCacheListener implements CacheListener
      */
     public function onCacheResponse(RequestInterface $request, ResponseInterface $response, $fromCache, $cacheItem)
     {
-        return $response->withHeader($this->headerName, $cacheHit ? 'HIT' : 'MISS');
+        return $response->withHeader($this->headerName, $fromCache ? 'HIT' : 'MISS');
     }
 }
