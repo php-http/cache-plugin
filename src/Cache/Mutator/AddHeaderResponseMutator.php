@@ -18,7 +18,7 @@ class AddHeaderResponseMutator implements ResponseMutator
     /**
      * @param string $headerName
      */
-    public function __construct($headerName = 'X-From-Php-Http-Cache')
+    public function __construct($headerName = 'X-Cache')
     {
         $this->headerName = $headerName;
     }
@@ -33,6 +33,6 @@ class AddHeaderResponseMutator implements ResponseMutator
      */
     public function mutate(RequestInterface $request, ResponseInterface $response, $cacheHit)
     {
-        return $response->withHeader($this->headerName, $cacheHit);
+        return $response->withHeader($this->headerName, $cacheHit ? 'HIT' : 'MISS');
     }
 }
