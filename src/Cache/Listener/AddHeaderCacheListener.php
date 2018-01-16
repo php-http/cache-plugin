@@ -4,7 +4,7 @@ namespace Http\Client\Common\Plugin\Cache\Listener;
 
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use Psr\Cache\CacheItemPoolInterface;
+use Psr\Cache\CacheItemInterface;
 
 /**
  * Adds a header indicating if the response came from cache.
