@@ -26,5 +26,5 @@ interface CacheListener
      *
      * @return string
      */
-    public function onCacheResponse(RequestInterface $request, ResponseInterface $response, $fromCache, CacheItemInterface $cacheItem);
+    public function onCacheResponse(RequestInterface $request, ResponseInterface $response, $fromCache, $cacheItem);
 }

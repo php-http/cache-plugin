@@ -464,7 +464,7 @@ final class CachePlugin implements Plugin
      *
      * @return ResponseInterface
      */
-    private function handleCacheListeners(RequestInterface $request, ResponseInterface $response, $cacheHit, CacheItemInterface $cacheItem)
+    private function handleCacheListeners(RequestInterface $request, ResponseInterface $response, $cacheHit, $cacheItem)
     {
         foreach ($this->config['cache_listeners'] as $cacheListener) {
             $response = $cacheListener->onCacheResponse($request, $response, $cacheHit, $cacheItem);
