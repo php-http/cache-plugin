@@ -4,6 +4,7 @@ namespace Http\Client\Common\Plugin\Cache\Mutator;
 
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Cache\CacheItemPoolInterface;
 
 /**
  * Adds a header if the response came from cache.
@@ -26,12 +27,14 @@ class AddHeaderResponseMutator implements ResponseMutator
     /**
      * Mutate the response depending on the cache status.
      *
-     * @param ResponseInterface $response
-     * @param bool              $cacheHit
+     * @param RequestInterface        $request
+     * @param ResponseInterface       $response
+     * @param bool                    $cacheHit
+     * @param CacheItemInterface|null $cacheItem
      *
      * @return string
      */
-    public function mutate(RequestInterface $request, ResponseInterface $response, $cacheHit)
+    public function mutate(RequestInterface $request, ResponseInterface $response, $cacheHit, CacheItemInterface $cacheItem)
     {
         return $response->withHeader($this->headerName, $cacheHit ? 'HIT' : 'MISS');
     }
