@@ -61,7 +61,7 @@ final class CachePlugin implements Plugin
      *     @var array $respect_response_cache_directives list of cache directives this plugin will respect while caching responses
      *     @var CacheKeyGenerator $cache_key_generator an object to generate the cache key. Defaults to a new instance of SimpleGenerator
      *     @var CacheListener[] $cache_listeners an array of objects to act on the response based on the results of the cache check.
-                    Defaults to an empty array
+     *              Defaults to an empty array
      * }
      */
     public function __construct(CacheItemPoolInterface $pool, StreamFactory $streamFactory, array $config = [])
