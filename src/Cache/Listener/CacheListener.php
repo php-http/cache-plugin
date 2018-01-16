@@ -24,7 +24,7 @@ interface CacheListener
      *                                           Note that checking `$cacheItem->isHit()` is not sufficent to determine this.
      * @param CacheItemInterface|null $cacheItem
      *
-     * @return string
+     * @return ResponseInterface
      */
     public function onCacheResponse(RequestInterface $request, ResponseInterface $response, $fromCache, $cacheItem);
 }
