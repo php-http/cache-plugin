@@ -9,6 +9,7 @@ use Http\Client\Common\Plugin\Cache\Generator\SimpleGenerator;
 use Http\Client\Common\Plugin\Cache\Listener\CacheListener;
 use Http\Message\StreamFactory;
 use Http\Promise\FulfilledPromise;
+use Http\Promise\Promise;
 use Psr\Cache\CacheItemInterface;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Http\Message\RequestInterface;
@@ -127,7 +128,7 @@ final class CachePlugin implements Plugin
     /**
      * {@inheritdoc}
      */
-    public function handleRequest(RequestInterface $request, callable $next, callable $first)
+    public function handleRequest(RequestInterface $request, callable $next, callable $first): Promise
     {
         $method = strtoupper($request->getMethod());
         // if the request not is cachable, move to $next
