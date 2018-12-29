@@ -30,8 +30,6 @@ matrix:
           env: COMPOSER_FLAGS="--prefer-stable --prefer-lowest" COVERAGE=true TEST_COMMAND="composer test-ci"
         - php: 7.2
           env: DEPENDENCIES="php-http/client-common:^1.9"
-        - php: hhvm
-          dist: trusty
 
 before_install:
     - if [[ $COVERAGE != true ]]; then phpenv config-rm xdebug.ini || true; fi
