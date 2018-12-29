@@ -23,6 +23,8 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  */
 final class CachePlugin implements Plugin
 {
+    use VersionBridgePlugin;
+
     /**
      * @var CacheItemPoolInterface
      */
@@ -124,10 +126,7 @@ final class CachePlugin implements Plugin
         return new self($pool, $streamFactory, $config);
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function handleRequest(RequestInterface $request, callable $next, callable $first)
+    protected function doHandleRequest(RequestInterface $request, callable $next, callable $first)
     {
         $method = strtoupper($request->getMethod());
         // if the request not is cachable, move to $next
