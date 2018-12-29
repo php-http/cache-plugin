@@ -21,8 +21,10 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  *
  * @author Tobias Nyholm <tobias.nyholm@gmail.com>
  */
-final class CachePlugin extends VersionBridgePlugin
+final class CachePlugin implements Plugin
 {
+    use VersionBridgePlugin;
+
     /**
      * @var CacheItemPoolInterface
      */
