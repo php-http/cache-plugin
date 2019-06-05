@@ -13,6 +13,7 @@ use Psr\Cache\CacheItemInterface;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\StreamFactoryInterface;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -33,7 +34,7 @@ final class CachePlugin implements Plugin
     private $pool;
 
     /**
-     * @var StreamFactory
+     * @var StreamFactory|StreamFactoryInterface
      */
     private $streamFactory;
 
@@ -50,9 +51,9 @@ final class CachePlugin implements Plugin
     private $noCacheFlags = ['no-cache', 'private', 'no-store'];
 
     /**
-     * @param CacheItemPoolInterface $pool
-     * @param StreamFactory          $streamFactory
-     * @param array                  $config        {
+     * @param CacheItemPoolInterface               $pool
+     * @param StreamFactory|StreamFactoryInterface $streamFactory
+     * @param array                                $config        {
      *
      *     @var bool $respect_cache_headers Whether to look at the cache directives or ignore them
      *     @var int $default_ttl (seconds) If we do not respect cache headers or can't calculate a good ttl, use this
@@ -69,8 +70,12 @@ final class CachePlugin implements Plugin
      *              Defaults to an empty array
      * }
      */
-    public function __construct(CacheItemPoolInterface $pool, StreamFactory $streamFactory, array $config = [])
+    public function __construct(CacheItemPoolInterface $pool, $streamFactory, array $config = [])
     {
+        if (!($streamFactory instanceof StreamFactory) && !($streamFactory instanceof StreamFactoryInterface)) {
+            throw new \TypeError(\sprintf('Argument 2 passed to %s::__construct() must be of type %s|%s, %s given.', self::class, StreamFactory::class, StreamFactoryInterface::class, \is_object($streamFactory) ? \get_class($streamFactory) : \gettype($streamFactory)));
+        }
+
         $this->pool = $pool;
         $this->streamFactory = $streamFactory;
 
@@ -91,13 +96,13 @@ final class CachePlugin implements Plugin
      * This method will setup the cachePlugin in client cache mode. When using the client cache mode the plugin will
      * cache responses with `private` cache directive.
      *
-     * @param CacheItemPoolInterface $pool
-     * @param StreamFactory          $streamFactory
-     * @param array                  $config        For all possible config options see the constructor docs
+     * @param CacheItemPoolInterface               $pool
+     * @param StreamFactory|StreamFactoryInterface $streamFactory
+     * @param array                                $config        For all possible config options see the constructor docs
      *
      * @return CachePlugin
      */
-    public static function clientCache(CacheItemPoolInterface $pool, StreamFactory $streamFactory, array $config = [])
+    public static function clientCache(CacheItemPoolInterface $pool, $streamFactory, array $config = [])
     {
         // Allow caching of private requests
         if (isset($config['respect_response_cache_directives'])) {
@@ -115,13 +120,13 @@ final class CachePlugin implements Plugin
      * This method will setup the cachePlugin in server cache mode. This is the default caching behavior it refuses to
      * cache responses with the `private`or `no-cache` directives.
      *
-     * @param CacheItemPoolInterface $pool
-     * @param StreamFactory          $streamFactory
-     * @param array                  $config        For all possible config options see the constructor docs
+     * @param CacheItemPoolInterface               $pool
+     * @param StreamFactory|StreamFactoryInterface $streamFactory
+     * @param array                                $config        For all possible config options see the constructor docs
      *
      * @return CachePlugin
      */
-    public static function serverCache(CacheItemPoolInterface $pool, StreamFactory $streamFactory, array $config = [])
+    public static function serverCache(CacheItemPoolInterface $pool, $streamFactory, array $config = [])
     {
         return new self($pool, $streamFactory, $config);
     }
