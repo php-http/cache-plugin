@@ -11,7 +11,7 @@
         }
     ],
     "require": {
-        "php": "^5.4 || ^7.0",
+        "php": "^7.1",
         "psr/cache": "^1.0",
         "php-http/client-common": "^1.9 || ^2.0",
         "php-http/message-factory": "^1.0",
