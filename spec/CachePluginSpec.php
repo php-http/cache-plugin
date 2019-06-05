@@ -46,9 +46,9 @@ class CachePluginSpec extends ObjectBehavior
 
         $response->getStatusCode()->willReturn(200);
         $response->getBody()->willReturn($stream);
-        $response->getHeader('Cache-Control')->willReturn(array())->shouldBeCalled();
-        $response->getHeader('Expires')->willReturn(array())->shouldBeCalled();
-        $response->getHeader('ETag')->willReturn(array())->shouldBeCalled();
+        $response->getHeader('Cache-Control')->willReturn([])->shouldBeCalled();
+        $response->getHeader('Expires')->willReturn([])->shouldBeCalled();
+        $response->getHeader('ETag')->willReturn([])->shouldBeCalled();
 
         $pool->getItem('d20f64acc6e70b6079845f2fe357732929550ae1')->shouldBeCalled()->willReturn($item);
         $item->isHit()->willReturn(false);
@@ -77,8 +77,8 @@ class CachePluginSpec extends ObjectBehavior
         $request->getBody()->shouldBeCalled();
 
         $response->getStatusCode()->willReturn(400);
-        $response->getHeader('Cache-Control')->willReturn(array());
-        $response->getHeader('Expires')->willReturn(array());
+        $response->getHeader('Cache-Control')->willReturn([]);
+        $response->getHeader('Expires')->willReturn([]);
 
         $pool->getItem('d20f64acc6e70b6079845f2fe357732929550ae1')->shouldBeCalled()->willReturn($item);
         $item->isHit()->willReturn(false);
@@ -184,10 +184,10 @@ class CachePluginSpec extends ObjectBehavior
 
         $response->getStatusCode()->willReturn(200);
         $response->getBody()->willReturn($stream);
-        $response->getHeader('Cache-Control')->willReturn(array('max-age=40'));
-        $response->getHeader('Age')->willReturn(array('15'));
-        $response->getHeader('Expires')->willReturn(array());
-        $response->getHeader('ETag')->willReturn(array());
+        $response->getHeader('Cache-Control')->willReturn(['max-age=40']);
+        $response->getHeader('Age')->willReturn(['15']);
+        $response->getHeader('Expires')->willReturn([]);
+        $response->getHeader('ETag')->willReturn([]);
 
         $pool->getItem('d20f64acc6e70b6079845f2fe357732929550ae1')->shouldBeCalled()->willReturn($item);
         $item->isHit()->willReturn(false);
@@ -222,9 +222,9 @@ class CachePluginSpec extends ObjectBehavior
         $request->getUri()->willReturn('/');
         $response->getStatusCode()->willReturn(200);
         $response->getBody()->willReturn($stream);
-        $response->getHeader('Cache-Control')->willReturn(array());
-        $response->getHeader('Expires')->willReturn(array());
-        $response->getHeader('ETag')->willReturn(array('foo_etag'));
+        $response->getHeader('Cache-Control')->willReturn([]);
+        $response->getHeader('Expires')->willReturn([]);
+        $response->getHeader('ETag')->willReturn(['foo_etag']);
 
         $pool->getItem('d20f64acc6e70b6079845f2fe357732929550ae1')->shouldBeCalled()->willReturn($item);
         $item->isHit()->willReturn(false);
@@ -317,8 +317,8 @@ class CachePluginSpec extends ObjectBehavior
         $request->withHeader(Argument::any(), Argument::any())->willReturn($request);
 
         $response->getStatusCode()->willReturn(304);
-        $response->getHeader('Cache-Control')->willReturn(array());
-        $response->getHeader('Expires')->willReturn(array())->shouldBeCalled();
+        $response->getHeader('Cache-Control')->willReturn([]);
+        $response->getHeader('Expires')->willReturn([])->shouldBeCalled();
 
         // Make sure we add back the body
         $response->withBody($stream)->willReturn($response)->shouldBeCalled();
@@ -377,8 +377,8 @@ class CachePluginSpec extends ObjectBehavior
         $response->getStatusCode()->willReturn(200);
         $response->getBody()->willReturn($stream);
         $response->getHeader('Cache-Control')->willReturn(['private'])->shouldBeCalled();
-        $response->getHeader('Expires')->willReturn(array())->shouldBeCalled();
-        $response->getHeader('ETag')->willReturn(array())->shouldBeCalled();
+        $response->getHeader('Expires')->willReturn([])->shouldBeCalled();
+        $response->getHeader('ETag')->willReturn([])->shouldBeCalled();
 
         $pool->getItem('d20f64acc6e70b6079845f2fe357732929550ae1')->shouldBeCalled()->willReturn($item);
         $item->isHit()->willReturn(false);
