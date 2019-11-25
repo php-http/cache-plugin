@@ -60,7 +60,7 @@ final class CachePlugin implements Plugin
      *              we have to store the cache for a longer time than the server originally says it is valid for.
      *              We store a cache item for $cache_lifetime + max age of the response.
      *     @var array $methods list of request methods which can be cached
-     *     @var array $blacklisted_paths list of regex patterns of paths explicitly not to be cached.
+     *     @var array $blacklisted_paths list of regex patterns of paths explicitly not to be cached
      *     @var array $respect_response_cache_directives list of cache directives this plugin will respect while caching responses
      *     @var CacheKeyGenerator $cache_key_generator an object to generate the cache key. Defaults to a new instance of SimpleGenerator
      *     @var CacheListener[] $cache_listeners an array of objects to act on the response based on the results of the cache check.
@@ -73,11 +73,9 @@ final class CachePlugin implements Plugin
         $this->streamFactory = $streamFactory;
 
         if (isset($config['respect_cache_headers']) && isset($config['respect_response_cache_directives'])) {
-            throw new \InvalidArgumentException(
-                'You can\'t provide config option "respect_cache_headers" and "respect_response_cache_directives". '.
-                'Use "respect_response_cache_directives" instead.'
-            );
+            throw new \InvalidArgumentException('You can\'t provide config option "respect_cache_headers" and "respect_response_cache_directives". '.'Use "respect_response_cache_directives" instead.');
         }
+
 
         $optionsResolver = new OptionsResolver();
         $this->configureOptions($optionsResolver);
