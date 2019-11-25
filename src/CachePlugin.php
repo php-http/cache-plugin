@@ -76,7 +76,6 @@ final class CachePlugin implements Plugin
             throw new \InvalidArgumentException('You can\'t provide config option "respect_cache_headers" and "respect_response_cache_directives". '.'Use "respect_response_cache_directives" instead.');
         }
 
-
         $optionsResolver = new OptionsResolver();
         $this->configureOptions($optionsResolver);
         $this->config = $optionsResolver->resolve($config);
