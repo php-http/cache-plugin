@@ -181,7 +181,7 @@ final class CachePlugin implements Plugin
                 return $this->handleCacheListeners($request, $this->createResponseFromCacheItem($cacheItem), true, $cacheItem);
             }
 
-            if ($this->isCacheable($request, $response)) {
+            if ($this->isCacheable($response) && $this->isCacheableRequest($request)) {
                 $bodyStream = $response->getBody();
                 $body = $bodyStream->__toString();
                 if ($bodyStream->isSeekable()) {
@@ -244,26 +244,37 @@ final class CachePlugin implements Plugin
     /**
      * Verify that we can cache this response.
      *
-     * @param RequestInterface  $request
      * @param ResponseInterface $response
      *
      * @return bool
      */
-    protected function isCacheable(RequestInterface $request, ResponseInterface $response)
+    protected function isCacheable(ResponseInterface $response)
     {
         if (!in_array($response->getStatusCode(), [200, 203, 300, 301, 302, 404, 410])) {
             return false;
         }
 
-        foreach ($this->config['blacklisted_paths'] as $not_to_cache_path) {
-            if (1 === preg_match('/'.$not_to_cache_path.'/', $request->getRequestTarget())) {
+        $nocacheDirectives = array_intersect($this->config['respect_response_cache_directives'], $this->noCacheFlags);
+        foreach ($nocacheDirectives as $nocacheDirective) {
+            if ($this->getCacheControlDirective($response, $nocacheDirective)) {
                 return false;
             }
         }
 
-        $nocacheDirectives = array_intersect($this->config['respect_response_cache_directives'], $this->noCacheFlags);
-        foreach ($nocacheDirectives as $nocacheDirective) {
-            if ($this->getCacheControlDirective($response, $nocacheDirective)) {
+        return true;
+    }
+
+    /**
+     * Verify that we can cache this request.
+     *
+     * @param RequestInterface  $request
+     *
+     * @return bool
+     */
+    protected function isCacheableRequest(RequestInterface $request)
+    {
+        foreach ($this->config['blacklisted_paths'] as $not_to_cache_path) {
+            if (1 === preg_match('/'.$not_to_cache_path.'/', $request->getRequestTarget())) {
                 return false;
             }
         }
@@ -358,7 +369,7 @@ final class CachePlugin implements Plugin
             'respect_response_cache_directives' => ['no-cache', 'private', 'max-age', 'no-store'],
             'cache_key_generator' => null,
             'cache_listeners' => [],
-            'blacklisted_paths' => [],  // restricted for
+            'blacklisted_paths' => [],
         ]);
 
         $resolver->setAllowedTypes('cache_lifetime', ['int', 'null']);

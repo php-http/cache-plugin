@@ -1,6 +1,6 @@
 # Change Log
 
-## 1.6.1 - 2019-11-25
+## 1.7.0 - unreleased
 
 ### Added
 
