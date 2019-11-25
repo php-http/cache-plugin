@@ -247,7 +247,7 @@ final class CachePlugin implements Plugin
     /**
      * Verify that we can cache this response.
      *
-     * @param RequestInterface $request
+     * @param RequestInterface  $request
      * @param ResponseInterface $response
      *
      * @return bool
