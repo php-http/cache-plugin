@@ -73,7 +73,7 @@ final class CachePlugin implements Plugin
         $this->streamFactory = $streamFactory;
 
         if (isset($config['respect_cache_headers']) && isset($config['respect_response_cache_directives'])) {
-            throw new \InvalidArgumentException('You can\'t provide config option "respect_cache_headers" and "respect_response_cache_directives". '.'Use "respect_response_cache_directives" instead.');
+            throw new \InvalidArgumentException('You can\'t provide config option "respect_cache_headers" and "respect_response_cache_directives". Use "respect_response_cache_directives" instead.');
         }
 
         $optionsResolver = new OptionsResolver();
@@ -271,7 +271,7 @@ final class CachePlugin implements Plugin
      *
      * @return bool
      */
-    protected function isCacheableRequest(RequestInterface $request)
+    private function isCacheableRequest(RequestInterface $request)
     {
         foreach ($this->config['blacklisted_paths'] as $not_to_cache_path) {
             if (1 === preg_match('/'.$not_to_cache_path.'/', $request->getUri())) {
