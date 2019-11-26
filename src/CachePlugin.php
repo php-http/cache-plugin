@@ -274,7 +274,7 @@ final class CachePlugin implements Plugin
     protected function isCacheableRequest(RequestInterface $request)
     {
         foreach ($this->config['blacklisted_paths'] as $not_to_cache_path) {
-            if (1 === preg_match('/'.$not_to_cache_path.'/', $request->getRequestTarget())) {
+            if (1 === preg_match('/'.$not_to_cache_path.'/', $request->getUri())) {
                 return false;
             }
         }
