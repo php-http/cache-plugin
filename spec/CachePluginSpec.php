@@ -400,6 +400,98 @@ class CachePluginSpec extends ObjectBehavior
         $this->handleRequest($request, $next, function () {});
     }
 
+    function it_does_not_store_responses_of_requests_to_blacklisted_paths(
+        CacheItemPoolInterface $pool,
+        CacheItemInterface $item,
+        RequestInterface $request,
+        ResponseInterface $response,
+        StreamFactory $streamFactory,
+        StreamInterface $stream
+    ) {
+        $this->beConstructedThrough('clientCache', [$pool, $streamFactory, [
+            'default_ttl' => 60,
+            'cache_lifetime' => 1000,
+            'blacklisted_paths' => ['\/foo']
+        ]]);
+
+        $httpBody = 'body';
+        $stream->__toString()->willReturn($httpBody);
+        $stream->isSeekable()->willReturn(true);
+
+        $request->getMethod()->willReturn('GET');
+        $request->getUri()->willReturn('/foo');
+        $request->getBody()->shouldBeCalled();
+
+        $response->getStatusCode()->willReturn(200);
+        $response->getBody()->willReturn($stream);
+        $response->getHeader('Cache-Control')->willReturn([])->shouldBeCalled();
+
+        $pool->getItem('231392a16d98e1cf631845c79b7d45f40bab08f3')->shouldBeCalled()->willReturn($item);
+        $item->isHit()->willReturn(false);
+
+        $item->set($this->getCacheItemMatcher([
+            'response' => $response->getWrappedObject(),
+            'body' => $httpBody,
+            'expiresAt' => 0,
+            'createdAt' => 0
+        ]))->willReturn($item)->shouldNotBeCalled();
+        $pool->save(Argument::any())->shouldNotBeCalled();
+
+        $next = function (RequestInterface $request) use ($response) {
+            return new FulfilledPromise($response->getWrappedObject());
+        };
+
+        $this->handleRequest($request, $next, function () {});
+    }
+
+    function it_stores_responses_of_requests_not_in_blacklisted_paths(
+        CacheItemPoolInterface $pool,
+        CacheItemInterface $item,
+        RequestInterface $request,
+        ResponseInterface $response,
+        StreamFactory $streamFactory,
+        StreamInterface $stream
+    ) {
+        $this->beConstructedThrough('clientCache', [$pool, $streamFactory, [
+            'default_ttl' => 60,
+            'cache_lifetime' => 1000,
+            'blacklisted_paths' => ['\/foo']
+        ]]);
+
+        $httpBody = 'body';
+        $stream->__toString()->willReturn($httpBody);
+        $stream->isSeekable()->willReturn(true);
+        $stream->rewind()->shouldBeCalled();
+
+        $request->getMethod()->willReturn('GET');
+        $request->getUri()->willReturn('/');
+        $request->getBody()->shouldBeCalled();
+
+        $response->getStatusCode()->willReturn(200);
+        $response->getBody()->willReturn($stream);
+        $response->getHeader('Cache-Control')->willReturn([])->shouldBeCalled();
+        $response->getHeader('Expires')->willReturn([])->shouldBeCalled();
+        $response->getHeader('ETag')->willReturn([])->shouldBeCalled();
+
+        $pool->getItem('d20f64acc6e70b6079845f2fe357732929550ae1')->shouldBeCalled()->willReturn($item);
+        $item->isHit()->willReturn(false);
+        $item->expiresAfter(1060)->willReturn($item)->shouldBeCalled();
+
+        $item->set($this->getCacheItemMatcher([
+            'response' => $response->getWrappedObject(),
+            'body' => $httpBody,
+            'expiresAt' => 0,
+            'createdAt' => 0,
+            'etag' => []
+        ]))->willReturn($item)->shouldBeCalled();
+        $pool->save(Argument::any())->shouldBeCalled();
+
+        $next = function (RequestInterface $request) use ($response) {
+            return new FulfilledPromise($response->getWrappedObject());
+        };
+
+        $this->handleRequest($request, $next, function () {});
+    }
 
     function it_can_be_initialized_with_custom_cache_key_generator(
         CacheItemPoolInterface $pool,

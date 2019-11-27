@@ -60,6 +60,7 @@ final class CachePlugin implements Plugin
      *              we have to store the cache for a longer time than the server originally says it is valid for.
      *              We store a cache item for $cache_lifetime + max age of the response.
      *     @var array $methods list of request methods which can be cached
+     *     @var array $blacklisted_paths list of regex patterns of paths explicitly not to be cached
      *     @var array $respect_response_cache_directives list of cache directives this plugin will respect while caching responses
      *     @var CacheKeyGenerator $cache_key_generator an object to generate the cache key. Defaults to a new instance of SimpleGenerator
      *     @var CacheListener[] $cache_listeners an array of objects to act on the response based on the results of the cache check.
@@ -72,10 +73,7 @@ final class CachePlugin implements Plugin
         $this->streamFactory = $streamFactory;
 
         if (isset($config['respect_cache_headers']) && isset($config['respect_response_cache_directives'])) {
-            throw new \InvalidArgumentException(
-                'You can\'t provide config option "respect_cache_headers" and "respect_response_cache_directives". '.
-                'Use "respect_response_cache_directives" instead.'
-            );
+            throw new \InvalidArgumentException('You can\'t provide config option "respect_cache_headers" and "respect_response_cache_directives". Use "respect_response_cache_directives" instead.');
         }
 
         $optionsResolver = new OptionsResolver();
@@ -183,7 +181,7 @@ final class CachePlugin implements Plugin
                 return $this->handleCacheListeners($request, $this->createResponseFromCacheItem($cacheItem), true, $cacheItem);
             }
 
-            if ($this->isCacheable($response)) {
+            if ($this->isCacheable($response) && $this->isCacheableRequest($request)) {
                 $bodyStream = $response->getBody();
                 $body = $bodyStream->__toString();
                 if ($bodyStream->isSeekable()) {
@@ -259,6 +257,24 @@ final class CachePlugin implements Plugin
         $nocacheDirectives = array_intersect($this->config['respect_response_cache_directives'], $this->noCacheFlags);
         foreach ($nocacheDirectives as $nocacheDirective) {
             if ($this->getCacheControlDirective($response, $nocacheDirective)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Verify that we can cache this request.
+     *
+     * @param RequestInterface $request
+     *
+     * @return bool
+     */
+    private function isCacheableRequest(RequestInterface $request)
+    {
+        foreach ($this->config['blacklisted_paths'] as $not_to_cache_path) {
+            if (1 === preg_match('/'.$not_to_cache_path.'/', $request->getUri())) {
                 return false;
             }
         }
@@ -353,6 +369,7 @@ final class CachePlugin implements Plugin
             'respect_response_cache_directives' => ['no-cache', 'private', 'max-age', 'no-store'],
             'cache_key_generator' => null,
             'cache_listeners' => [],
+            'blacklisted_paths' => [],
         ]);
 
         $resolver->setAllowedTypes('cache_lifetime', ['int', 'null']);
@@ -360,6 +377,7 @@ final class CachePlugin implements Plugin
         $resolver->setAllowedTypes('respect_cache_headers', ['bool', 'null']);
         $resolver->setAllowedTypes('methods', 'array');
         $resolver->setAllowedTypes('cache_key_generator', ['null', 'Http\Client\Common\Plugin\Cache\Generator\CacheKeyGenerator']);
+        $resolver->setAllowedTypes('blacklisted_paths', 'array');
         $resolver->setAllowedValues('hash_algo', hash_algos());
         $resolver->setAllowedValues('methods', function ($value) {
             /* RFC7230 sections 3.1.1 and 3.2.6 except limited to uppercase characters. */

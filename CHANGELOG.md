@@ -1,5 +1,11 @@
 # Change Log
 
+## 1.7.0 - unreleased
+
+### Added
+
+* Added `blacklisted_paths` option, which takes an array of `strings` (regular expressions) and allows to define paths, that shall not be cached in any case.
+
 ## 1.6.0 - 2019-01-23
 
 ### Added
