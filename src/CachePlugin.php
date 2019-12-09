@@ -17,7 +17,9 @@ use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
- * Allow for caching a response.
+ * Allow for caching a response with a PSR-6 compatible caching engine.
+ *
+ * It can follow the RFC-7234 caching specification or use a fixed cache lifetime.
  *
  * @author Tobias Nyholm <tobias.nyholm@gmail.com>
  */
