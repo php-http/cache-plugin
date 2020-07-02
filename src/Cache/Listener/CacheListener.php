@@ -11,7 +11,7 @@ use Psr\Cache\CacheItemInterface;
  * Provides an opportunity to update the response based on whether the cache was a hit or a miss, or
  * other cache-meta-data.
  *
- * @author Iain Connor <iain.connor@priceline.com>
+ * @author Iain Connor <iainconnor@gmail.com>
  */
 interface CacheListener
 {
