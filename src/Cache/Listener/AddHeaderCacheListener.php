@@ -9,7 +9,7 @@ use Psr\Cache\CacheItemInterface;
 /**
  * Adds a header indicating if the response came from cache.
  *
- * @author Iain Connor <iain.connor@priceline.com>
+ * @author Iain Connor <iainconnor@gmail.com>
  */
 class AddHeaderCacheListener implements CacheListener
 {
