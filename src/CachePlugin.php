@@ -78,7 +78,7 @@ final class CachePlugin implements Plugin
         $this->pool = $pool;
         $this->streamFactory = $streamFactory;
 
-        if (isset($config['respect_cache_headers']) && isset($config['respect_response_cache_directives'])) {
+        if (\array_key_exists('respect_cache_headers', $config) && \array_key_exists('respect_response_cache_directives', $config)) {
             throw new \InvalidArgumentException('You can\'t provide config option "respect_cache_headers" and "respect_response_cache_directives". Use "respect_response_cache_directives" instead.');
         }
 
@@ -103,7 +103,7 @@ final class CachePlugin implements Plugin
     public static function clientCache(CacheItemPoolInterface $pool, $streamFactory, array $config = [])
     {
         // Allow caching of private requests
-        if (isset($config['respect_response_cache_directives'])) {
+        if (\array_key_exists('respect_response_cache_directives', $config)) {
             $config['respect_response_cache_directives'][] = 'no-cache';
             $config['respect_response_cache_directives'][] = 'max-age';
             $config['respect_response_cache_directives'] = array_unique($config['respect_response_cache_directives']);
