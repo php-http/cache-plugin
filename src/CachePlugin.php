@@ -222,7 +222,7 @@ final class CachePlugin implements Plugin
     private function calculateCacheItemExpiresAfter($maxAge)
     {
         if (null === $this->config['cache_lifetime'] && null === $maxAge) {
-            return;
+            return null;
         }
 
         return $this->config['cache_lifetime'] + $maxAge;
@@ -239,7 +239,7 @@ final class CachePlugin implements Plugin
     private function calculateResponseExpiresAt($maxAge)
     {
         if (null === $maxAge) {
-            return;
+            return null;
         }
 
         return time() + $maxAge;
@@ -430,7 +430,7 @@ final class CachePlugin implements Plugin
         $data = $cacheItem->get();
         // The isset() is to be removed in 2.0.
         if (!isset($data['createdAt'])) {
-            return;
+            return null;
         }
 
         $modified = new \DateTime('@'.$data['createdAt']);
