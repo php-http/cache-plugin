@@ -152,22 +152,24 @@ final class CachePlugin implements Plugin
 
         if ($cacheItem->isHit()) {
             $data = $cacheItem->get();
-            // The array_key_exists() is to be removed in 2.0.
-            if (array_key_exists('expiresAt', $data) && (null === $data['expiresAt'] || time() < $data['expiresAt'])) {
-                // This item is still valid according to previous cache headers
-                $response = $this->createResponseFromCacheItem($cacheItem);
-                $response = $this->handleCacheListeners($request, $response, true, $cacheItem);
+            if (is_array($data)) {
+                // The array_key_exists() is to be removed in 2.0.
+                if (array_key_exists('expiresAt', $data) && (null === $data['expiresAt'] || time() < $data['expiresAt'])) {
+                    // This item is still valid according to previous cache headers
+                    $response = $this->createResponseFromCacheItem($cacheItem);
+                    $response = $this->handleCacheListeners($request, $response, true, $cacheItem);
 
-                return new FulfilledPromise($response);
-            }
+                    return new FulfilledPromise($response);
+                }
 
-            // Add headers to ask the server if this cache is still valid
-            if ($modifiedSinceValue = $this->getModifiedSinceHeaderValue($cacheItem)) {
-                $request = $request->withHeader('If-Modified-Since', $modifiedSinceValue);
-            }
+                // Add headers to ask the server if this cache is still valid
+                if ($modifiedSinceValue = $this->getModifiedSinceHeaderValue($cacheItem)) {
+                    $request = $request->withHeader('If-Modified-Since', $modifiedSinceValue);
+                }
 
-            if ($etag = $this->getETag($cacheItem)) {
-                $request = $request->withHeader('If-None-Match', $etag);
+                if ($etag = $this->getETag($cacheItem)) {
+                    $request = $request->withHeader('If-None-Match', $etag);
+                }
             }
         }
 
