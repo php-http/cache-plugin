@@ -333,7 +333,7 @@ final class CachePlugin implements Plugin
         if (!is_bool($maxAge)) {
             $ageHeaders = $response->getHeader('Age');
             foreach ($ageHeaders as $age) {
-                return $maxAge - ((int) $age);
+                return ((int) $maxAge) - ((int) $age);
             }
 
             return (int) $maxAge;
@@ -449,7 +449,7 @@ final class CachePlugin implements Plugin
         $data = $cacheItem->get();
         // The isset() is to be removed in 2.0.
         if (!isset($data['etag'])) {
-            return;
+            return null;
         }
 
         foreach ($data['etag'] as $etag) {
@@ -457,6 +457,8 @@ final class CachePlugin implements Plugin
                 return $etag;
             }
         }
+
+        return null;
     }
 
     /**
