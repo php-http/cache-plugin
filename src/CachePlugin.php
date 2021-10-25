@@ -207,7 +207,7 @@ final class CachePlugin implements Plugin
                 $this->pool->save($cacheItem);
             }
 
-            return $this->handleCacheListeners($request, $response, false, isset($cacheItem) ? $cacheItem : null);
+            return $this->handleCacheListeners($request, $response, false, $cacheItem);
         });
     }
 
