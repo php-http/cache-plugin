@@ -53,20 +53,19 @@ final class CachePlugin implements Plugin
 
     /**
      * @param StreamFactory|StreamFactoryInterface $streamFactory
-     * @param mixed[]                              $config        {
+     * @param mixed[]                              $config
      *
-     *     @var bool $respect_cache_headers Whether to look at the cache directives or ignore them
-     *     @var int $default_ttl (seconds) If we do not respect cache headers or can't calculate a good ttl, use this
-     *              value
-     *     @var string $hash_algo The hashing algorithm to use when generating cache keys
-     *     @var int $cache_lifetime (seconds) To support serving a previous stale response when the server answers 304
+     *     bool respect_cache_headers: Whether to look at the cache directives or ignore them
+     *     int default_ttl: (seconds) If we do not respect cache headers or can't calculate a good ttl, use this value
+     *     string hash_algo: The hashing algorithm to use when generating cache keys
+     *     int cache_lifetime: (seconds) To support serving a previous stale response when the server answers 304
      *              we have to store the cache for a longer time than the server originally says it is valid for.
      *              We store a cache item for $cache_lifetime + max age of the response.
-     *     @var string[] $methods list of request methods which can be cached
-     *     @var string[] $blacklisted_paths list of regex for URLs explicitly not to be cached
-     *     @var string[] $respect_response_cache_directives list of cache directives this plugin will respect while caching responses
-     *     @var CacheKeyGenerator $cache_key_generator an object to generate the cache key. Defaults to a new instance of SimpleGenerator
-     *     @var CacheListener[] $cache_listeners an array of objects to act on the response based on the results of the cache check.
+     *     string[] methods: list of request methods which can be cached
+     *     string[] blacklisted_paths: list of regex for URLs explicitly not to be cached
+     *     string[] respect_response_cache_directives: list of cache directives this plugin will respect while caching responses
+     *     CacheKeyGenerator cache_key_generator: an object to generate the cache key. Defaults to a new instance of SimpleGenerator
+     *     CacheListener[] cache_listeners: an array of objects to act on the response based on the results of the cache check.
      *              Defaults to an empty array
      * }
      */
