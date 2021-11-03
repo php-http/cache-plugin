@@ -1,5 +1,11 @@
 # Change Log
 
+## 1.7.3 - 2021-11-03
+
+### Changed
+
+- Be more defensive about cache hits. A cache entry can technically contain `null`.
+
 ## 1.7.2 - 2021-04-14
 
 ### Added
