@@ -1,5 +1,11 @@
 # Change Log
 
+## 1.7.4 - 2021-11-30
+
+### Added
+
+- Allow installation with Symfony 6
+
 ## 1.7.3 - 2021-11-03
 
 ### Changed
