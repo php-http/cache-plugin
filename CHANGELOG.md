@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.7.5 - 2022-01-18
+
+- Allow installation with psr/cache 3.0 (1.0 and 2.0 are still allowed too)
+
 ## 1.7.4 - 2021-11-30
 
 ### Added
