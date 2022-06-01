@@ -58,7 +58,7 @@ final class CachePlugin implements Plugin
      *     bool respect_cache_headers: Whether to look at the cache directives or ignore them
      *     int default_ttl: (seconds) If we do not respect cache headers or can't calculate a good ttl, use this value
      *     string hash_algo: The hashing algorithm to use when generating cache keys
-     *     int cache_lifetime: (seconds) To support serving a previous stale response when the server answers 304
+     *     int|null cache_lifetime: (seconds) To support serving a previous stale response when the server answers 304
      *              we have to store the cache for a longer time than the server originally says it is valid for.
      *              We store a cache item for $cache_lifetime + max age of the response.
      *     string[] methods: list of request methods which can be cached
@@ -230,7 +230,7 @@ final class CachePlugin implements Plugin
             return null;
         }
 
-        return $this->config['cache_lifetime'] + $maxAge;
+        return ($this->config['cache_lifetime'] ?: 0) + ($maxAge ?: 0);
     }
 
     /**
@@ -368,7 +368,7 @@ final class CachePlugin implements Plugin
         $resolver->setAllowedTypes('default_ttl', ['int', 'null']);
         $resolver->setAllowedTypes('respect_cache_headers', ['bool', 'null']);
         $resolver->setAllowedTypes('methods', 'array');
-        $resolver->setAllowedTypes('cache_key_generator', ['null', 'Http\Client\Common\Plugin\Cache\Generator\CacheKeyGenerator']);
+        $resolver->setAllowedTypes('cache_key_generator', ['null', CacheKeyGenerator::class]);
         $resolver->setAllowedTypes('blacklisted_paths', 'array');
         $resolver->setAllowedValues('hash_algo', hash_algos());
         $resolver->setAllowedValues('methods', function ($value) {

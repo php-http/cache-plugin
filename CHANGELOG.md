@@ -4,6 +4,7 @@
 
 - Test with PHP 8.1 and 8.2
 - Made phpspec tests compatible with PSR-7 2.0 strict typing
+- Detect `null` and use 0 explicitly to calculate expiration
 
 ## 1.7.5 - 2022-01-18
 
