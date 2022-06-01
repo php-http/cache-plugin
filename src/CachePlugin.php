@@ -354,7 +354,7 @@ final class CachePlugin implements Plugin
         $resolver->setDefaults([
             'cache_lifetime' => 86400 * 30, // 30 days
             'default_ttl' => 0,
-            //Deprecated as of v1.3, to be removed in v2.0. Use respect_response_cache_directives instead
+            // Deprecated as of v1.3, to be removed in v2.0. Use respect_response_cache_directives instead
             'respect_cache_headers' => null,
             'hash_algo' => 'sha1',
             'methods' => ['GET', 'HEAD'],
