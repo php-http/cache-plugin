@@ -195,11 +195,7 @@ final class CachePlugin implements Plugin
             if ($this->isCacheable($response) && $this->isCacheableRequest($request)) {
                 $bodyStream = $response->getBody();
                 $body = $bodyStream->__toString();
-                if ($bodyStream->isSeekable()) {
-                    $bodyStream->rewind();
-                } else {
-                    $response = $response->withBody($this->streamFactory->createStream($body));
-                }
+                $bodyStream->detach();
 
                 $maxAge = $this->getMaxAge($response);
                 $cacheItem
@@ -212,6 +208,13 @@ final class CachePlugin implements Plugin
                         'etag' => $response->getHeader('ETag'),
                     ]);
                 $this->pool->save($cacheItem);
+
+                $bodyStream = $this->streamFactory->createStream($body);
+                if ($bodyStream->isSeekable()) {
+                    $bodyStream->rewind();
+                }
+
+                $response = $response->withBody($bodyStream);
             }
 
             return $this->handleCacheListeners($request, $response, false, $cacheItem);
