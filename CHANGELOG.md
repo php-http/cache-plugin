@@ -1,5 +1,10 @@
 # Change Log
 
+## 1.7.6 - 2023-04-23
+
+- Test with PHP 8.1 and 8.2
+- Made phpspec tests compatible with PSR-7 2.0 strict typing
+
 ## 1.7.5 - 2022-01-18
 
 - Allow installation with psr/cache 3.0 (1.0 and 2.0 are still allowed too)
