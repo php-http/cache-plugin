@@ -1,6 +1,6 @@
 # Change Log
 
-## 1.7.6 - 2023-04-23
+## 1.7.6 - 2023-04-28
 
 - Test with PHP 8.1 and 8.2
 - Made phpspec tests compatible with PSR-7 2.0 strict typing
