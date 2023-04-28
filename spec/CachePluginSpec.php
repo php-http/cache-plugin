@@ -13,6 +13,8 @@ use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UriInterface;
+use Http\Client\Common\Plugin\CachePlugin;
+use Http\Client\Common\Plugin;
 
 class CachePluginSpec extends ObjectBehavior
 {
@@ -26,12 +28,12 @@ class CachePluginSpec extends ObjectBehavior
 
     function it_is_initializable(CacheItemPoolInterface $pool)
     {
-        $this->shouldHaveType('Http\Client\Common\Plugin\CachePlugin');
+        $this->shouldHaveType(CachePlugin::class);
     }
 
     function it_is_a_plugin()
     {
-        $this->shouldImplement('Http\Client\Common\Plugin');
+        $this->shouldImplement(Plugin::class);
     }
 
     function it_caches_responses(CacheItemPoolInterface $pool, CacheItemInterface $item, RequestInterface $request, UriInterface $uri, ResponseInterface $response, StreamInterface $stream)
@@ -44,7 +46,7 @@ class CachePluginSpec extends ObjectBehavior
         $request->getMethod()->willReturn('GET');
         $request->getUri()->willReturn($uri);
         $uri->__toString()->willReturn('https://example.com/');
-        $request->getBody()->shouldBeCalled();
+        $request->getBody()->shouldBeCalled()->willReturn($stream);
 
         $response->getStatusCode()->willReturn(200);
         $response->getBody()->willReturn($stream);
@@ -72,12 +74,13 @@ class CachePluginSpec extends ObjectBehavior
         $this->handleRequest($request, $next, function () {});
     }
 
-    function it_doesnt_store_failed_responses(CacheItemPoolInterface $pool, CacheItemInterface $item, RequestInterface $request, UriInterface $uri, ResponseInterface $response)
+    function it_doesnt_store_failed_responses(CacheItemPoolInterface $pool, CacheItemInterface $item, RequestInterface $request, UriInterface $uri, StreamInterface $requestBody, ResponseInterface $response)
     {
         $request->getMethod()->willReturn('GET');
         $request->getUri()->willReturn($uri);
         $uri->__toString()->willReturn('https://example.com/');
-        $request->getBody()->shouldBeCalled();
+        $request->getBody()->shouldBeCalled()->willReturn($requestBody);
+        $requestBody->__toString()->shouldBeCalled()->willReturn('body');
 
         $response->getStatusCode()->willReturn(400);
         $response->getHeader('Cache-Control')->willReturn([]);
@@ -187,7 +190,7 @@ class CachePluginSpec extends ObjectBehavior
         $request->getMethod()->willReturn('GET');
         $request->getUri()->willReturn($uri);
         $uri->__toString()->willReturn('https://example.com/');
-        $request->getBody()->shouldBeCalled();
+        $request->getBody()->shouldBeCalled()->willReturn($stream);
 
         $response->getStatusCode()->willReturn(200);
         $response->getBody()->willReturn($stream);
@@ -223,7 +226,7 @@ class CachePluginSpec extends ObjectBehavior
         $stream->__toString()->willReturn($httpBody);
         $stream->isSeekable()->willReturn(true);
         $stream->rewind()->shouldBeCalled();
-        $request->getBody()->shouldBeCalled();
+        $request->getBody()->shouldBeCalled()->willReturn($stream);
 
         $request->getMethod()->willReturn('GET');
         $request->getUri()->willReturn($uri);
@@ -261,7 +264,8 @@ class CachePluginSpec extends ObjectBehavior
         $request->getMethod()->willReturn('GET');
         $request->getUri()->willReturn($uri);
         $uri->__toString()->willReturn('https://example.com/');
-        $request->getBody()->shouldBeCalled();
+        $request->getBody()->shouldBeCalled()->willReturn($stream);
+        $stream->__toString()->shouldBeCalled()->willReturn('');
 
         $request->withHeader('If-Modified-Since', 'Thursday, 01-Jan-70 01:18:31 GMT')->shouldBeCalled()->willReturn($request);
         $request->withHeader('If-None-Match', 'foo_etag')->shouldBeCalled()->willReturn($request);
@@ -285,14 +289,15 @@ class CachePluginSpec extends ObjectBehavior
         $this->handleRequest($request, $next, function () {});
     }
 
-    function it_servces_a_cached_response(CacheItemPoolInterface $pool, CacheItemInterface $item, RequestInterface $request, UriInterface $uri, ResponseInterface $response, StreamInterface $stream, StreamFactory $streamFactory)
+    function it_serves_a_cached_response(CacheItemPoolInterface $pool, CacheItemInterface $item, RequestInterface $request, UriInterface $uri, StreamInterface $requestBody, ResponseInterface $response, StreamInterface $stream, StreamFactory $streamFactory)
     {
         $httpBody = 'body';
 
         $request->getMethod()->willReturn('GET');
         $request->getUri()->willReturn($uri);
         $uri->__toString()->willReturn('https://example.com/');
-        $request->getBody()->shouldBeCalled();
+        $request->getBody()->shouldBeCalled()->willReturn($requestBody);
+        $requestBody->__toString()->shouldBeCalled()->willReturn('');
 
         $pool->getItem(Argument::any())->shouldBeCalled()->willReturn($item);
         $item->isHit()->willReturn(true);
@@ -315,14 +320,15 @@ class CachePluginSpec extends ObjectBehavior
         $this->handleRequest($request, $next, function () {});
     }
 
-    function it_serves_and_resaved_expired_response(CacheItemPoolInterface $pool, CacheItemInterface $item, RequestInterface $request, UriInterface $uri, ResponseInterface $response, StreamInterface $stream, StreamFactory $streamFactory)
+    function it_serves_and_resaved_expired_response(CacheItemPoolInterface $pool, CacheItemInterface $item, RequestInterface $request, UriInterface $uri, StreamInterface $requestStream, ResponseInterface $response, StreamInterface $stream, StreamFactory $streamFactory)
     {
         $httpBody = 'body';
 
         $request->getMethod()->willReturn('GET');
         $request->getUri()->willReturn($uri);
         $uri->__toString()->willReturn('https://example.com/');
-        $request->getBody()->shouldBeCalled();
+        $request->getBody()->shouldBeCalled()->willReturn($requestStream);
+        $requestStream->__toString()->willReturn('');
 
         $request->withHeader(Argument::any(), Argument::any())->willReturn($request);
         $request->withHeader(Argument::any(), Argument::any())->willReturn($request);
@@ -385,7 +391,7 @@ class CachePluginSpec extends ObjectBehavior
         $request->getMethod()->willReturn('GET');
         $request->getUri()->willReturn($uri);
         $uri->__toString()->willReturn('https://example.com/');
-        $request->getBody()->shouldBeCalled();
+        $request->getBody()->shouldBeCalled()->willReturn($stream);
 
         $response->getStatusCode()->willReturn(200);
         $response->getBody()->willReturn($stream);
@@ -435,7 +441,7 @@ class CachePluginSpec extends ObjectBehavior
         $request->getMethod()->willReturn('GET');
         $request->getUri()->willReturn($uri);
         $uri->__toString()->willReturn('https://example.com/foo');
-        $request->getBody()->shouldBeCalled();
+        $request->getBody()->shouldBeCalled()->willReturn($stream);
 
         $response->getStatusCode()->willReturn(200);
         $response->getBody()->willReturn($stream);
@@ -482,7 +488,7 @@ class CachePluginSpec extends ObjectBehavior
         $request->getMethod()->willReturn('GET');
         $request->getUri()->willReturn($uri);
         $uri->__toString()->willReturn('https://example.com/');
-        $request->getBody()->shouldBeCalled();
+        $request->getBody()->shouldBeCalled()->willReturn($stream);
 
         $response->getStatusCode()->willReturn(200);
         $response->getBody()->willReturn($stream);
