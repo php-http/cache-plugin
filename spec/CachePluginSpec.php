@@ -3,6 +3,7 @@
 namespace spec\Http\Client\Common\Plugin;
 
 use Http\Client\Common\Plugin\Cache\Generator\SimpleGenerator;
+use PhpSpec\Wrapper\Collaborator;
 use Prophecy\Argument;
 use Http\Message\StreamFactory;
 use Http\Promise\FulfilledPromise;
@@ -18,8 +19,14 @@ use Http\Client\Common\Plugin;
 
 class CachePluginSpec extends ObjectBehavior
 {
+    /**
+     * @var StreamFactory&Collaborator
+     */
+    private $streamFactory;
+
     function let(CacheItemPoolInterface $pool, StreamFactory $streamFactory)
     {
+        $this->streamFactory = $streamFactory;
         $this->beConstructedWith($pool, $streamFactory, [
             'default_ttl' => 60,
             'cache_lifetime' => 1000
@@ -42,6 +49,7 @@ class CachePluginSpec extends ObjectBehavior
         $stream->__toString()->willReturn($httpBody);
         $stream->isSeekable()->willReturn(true);
         $stream->rewind()->shouldBeCalled();
+        $stream->detach()->shouldBeCalled();
 
         $request->getMethod()->willReturn('GET');
         $request->getUri()->willReturn($uri);
@@ -53,6 +61,9 @@ class CachePluginSpec extends ObjectBehavior
         $response->getHeader('Cache-Control')->willReturn([])->shouldBeCalled();
         $response->getHeader('Expires')->willReturn([])->shouldBeCalled();
         $response->getHeader('ETag')->willReturn([])->shouldBeCalled();
+        $response->withBody($stream)->shouldBeCalled()->willReturn($response);
+
+        $this->streamFactory->createStream($httpBody)->shouldBeCalled()->willReturn($stream);
 
         $pool->getItem(Argument::any())->shouldBeCalled()->willReturn($item);
         $item->isHit()->willReturn(false);
@@ -128,6 +139,7 @@ class CachePluginSpec extends ObjectBehavior
         $stream->__toString()->willReturn($httpBody);
         $stream->isSeekable()->willReturn(true);
         $stream->rewind()->shouldBeCalled();
+        $stream->detach()->shouldBeCalled();
 
         $request->getMethod()->willReturn('POST');
         $request->getUri()->willReturn($uri);
@@ -139,6 +151,9 @@ class CachePluginSpec extends ObjectBehavior
         $response->getHeader('Cache-Control')->willReturn([])->shouldBeCalled();
         $response->getHeader('Expires')->willReturn([])->shouldBeCalled();
         $response->getHeader('ETag')->willReturn([])->shouldBeCalled();
+        $response->withBody($stream)->shouldBeCalled()->willReturn($response);
+
+        $this->streamFactory->createStream($httpBody)->shouldBeCalled()->willReturn($stream);
 
         $pool->getItem(Argument::any())->shouldBeCalled()->willReturn($item);
         $item->isHit()->willReturn(false);
@@ -186,6 +201,7 @@ class CachePluginSpec extends ObjectBehavior
         $stream->__toString()->willReturn($httpBody);
         $stream->isSeekable()->willReturn(true);
         $stream->rewind()->shouldBeCalled();
+        $stream->detach()->shouldBeCalled();
 
         $request->getMethod()->willReturn('GET');
         $request->getUri()->willReturn($uri);
@@ -198,6 +214,9 @@ class CachePluginSpec extends ObjectBehavior
         $response->getHeader('Age')->willReturn(['15']);
         $response->getHeader('Expires')->willReturn([]);
         $response->getHeader('ETag')->willReturn([]);
+        $response->withBody($stream)->shouldBeCalled()->willReturn($response);
+
+        $this->streamFactory->createStream($httpBody)->shouldBeCalled()->willReturn($stream);
 
         $pool->getItem(Argument::any())->shouldBeCalled()->willReturn($item);
         $item->isHit()->willReturn(false);
@@ -226,6 +245,7 @@ class CachePluginSpec extends ObjectBehavior
         $stream->__toString()->willReturn($httpBody);
         $stream->isSeekable()->willReturn(true);
         $stream->rewind()->shouldBeCalled();
+        $stream->detach()->shouldBeCalled();
         $request->getBody()->shouldBeCalled()->willReturn($stream);
 
         $request->getMethod()->willReturn('GET');
@@ -236,6 +256,9 @@ class CachePluginSpec extends ObjectBehavior
         $response->getHeader('Cache-Control')->willReturn([]);
         $response->getHeader('Expires')->willReturn([]);
         $response->getHeader('ETag')->willReturn(['foo_etag']);
+        $response->withBody($stream)->shouldBeCalled()->willReturn($response);
+
+        $this->streamFactory->createStream($httpBody)->shouldBeCalled()->willReturn($stream);
 
         $pool->getItem(Argument::any())->shouldBeCalled()->willReturn($item);
         $item->isHit()->willReturn(false);
@@ -387,6 +410,7 @@ class CachePluginSpec extends ObjectBehavior
         $stream->__toString()->willReturn($httpBody);
         $stream->isSeekable()->willReturn(true);
         $stream->rewind()->shouldBeCalled();
+        $stream->detach()->shouldBeCalled();
 
         $request->getMethod()->willReturn('GET');
         $request->getUri()->willReturn($uri);
@@ -398,6 +422,9 @@ class CachePluginSpec extends ObjectBehavior
         $response->getHeader('Cache-Control')->willReturn(['private'])->shouldBeCalled();
         $response->getHeader('Expires')->willReturn([])->shouldBeCalled();
         $response->getHeader('ETag')->willReturn([])->shouldBeCalled();
+        $response->withBody($stream)->shouldBeCalled()->willReturn($response);
+
+        $this->streamFactory->createStream($httpBody)->shouldBeCalled()->willReturn($stream);
 
         $pool->getItem(Argument::any())->shouldBeCalled()->willReturn($item);
         $item->isHit()->willReturn(false);
@@ -484,6 +511,7 @@ class CachePluginSpec extends ObjectBehavior
         $stream->__toString()->willReturn($httpBody);
         $stream->isSeekable()->willReturn(true);
         $stream->rewind()->shouldBeCalled();
+        $stream->detach()->shouldBeCalled();
 
         $request->getMethod()->willReturn('GET');
         $request->getUri()->willReturn($uri);
@@ -495,6 +523,9 @@ class CachePluginSpec extends ObjectBehavior
         $response->getHeader('Cache-Control')->willReturn([])->shouldBeCalled();
         $response->getHeader('Expires')->willReturn([])->shouldBeCalled();
         $response->getHeader('ETag')->willReturn([])->shouldBeCalled();
+        $response->withBody($stream)->shouldBeCalled()->willReturn($response);
+
+        $this->streamFactory->createStream($httpBody)->shouldBeCalled()->willReturn($stream);
 
         $pool->getItem(Argument::any())->shouldBeCalled()->willReturn($item);
         $item->isHit()->willReturn(false);

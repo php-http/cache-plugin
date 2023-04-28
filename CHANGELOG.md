@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.8.0 - 2023-04-28
+
+- Avoid PHP warning about serializing resources when serializing the response by detaching the stream.
+
 ## 1.7.6 - 2023-04-28
 
 - Test with PHP 8.1 and 8.2
