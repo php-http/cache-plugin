@@ -193,6 +193,10 @@ final class CachePlugin implements Plugin
             }
 
             if ($this->isCacheable($response) && $this->isCacheableRequest($request)) {
+                /* The PSR-7 response body is a stream. We can't expect that the response implements Serializable and handles the body.
+                 * Therefore we store the body separately and detach the stream to avoid attempting to serialize a resource.
+                .* Our implementation still makes the assumption that the response object apart from the body can be serialized and deserialized.
+                 */
                 $bodyStream = $response->getBody();
                 $body = $bodyStream->__toString();
                 $bodyStream->detach();
