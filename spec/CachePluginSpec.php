@@ -5,13 +5,13 @@ namespace spec\Http\Client\Common\Plugin;
 use Http\Client\Common\Plugin\Cache\Generator\SimpleGenerator;
 use PhpSpec\Wrapper\Collaborator;
 use Prophecy\Argument;
-use Http\Message\StreamFactory;
 use Http\Promise\FulfilledPromise;
 use PhpSpec\ObjectBehavior;
 use Psr\Cache\CacheItemInterface;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UriInterface;
 use Http\Client\Common\Plugin\CachePlugin;
@@ -20,11 +20,11 @@ use Http\Client\Common\Plugin;
 class CachePluginSpec extends ObjectBehavior
 {
     /**
-     * @var StreamFactory&Collaborator
+     * @var StreamFactoryInterface&Collaborator
      */
     private $streamFactory;
 
-    function let(CacheItemPoolInterface $pool, StreamFactory $streamFactory)
+    function let(CacheItemPoolInterface $pool, StreamFactoryInterface $streamFactory)
     {
         $this->streamFactory = $streamFactory;
         $this->beConstructedWith($pool, $streamFactory, [
@@ -126,7 +126,7 @@ class CachePluginSpec extends ObjectBehavior
         RequestInterface $request,
         UriInterface $uri,
         ResponseInterface $response,
-        StreamFactory $streamFactory,
+        StreamFactoryInterface $streamFactory,
         StreamInterface $stream
     ) {
         $this->beConstructedWith($pool, $streamFactory, [
@@ -181,7 +181,7 @@ class CachePluginSpec extends ObjectBehavior
         CacheItemInterface $item,
         RequestInterface $request,
         ResponseInterface $response,
-        StreamFactory $streamFactory,
+        StreamFactoryInterface $streamFactory,
         StreamInterface $stream
     ) {
         $this
@@ -312,7 +312,7 @@ class CachePluginSpec extends ObjectBehavior
         $this->handleRequest($request, $next, function () {});
     }
 
-    function it_serves_a_cached_response(CacheItemPoolInterface $pool, CacheItemInterface $item, RequestInterface $request, UriInterface $uri, StreamInterface $requestBody, ResponseInterface $response, StreamInterface $stream, StreamFactory $streamFactory)
+    function it_serves_a_cached_response(CacheItemPoolInterface $pool, CacheItemInterface $item, RequestInterface $request, UriInterface $uri, StreamInterface $requestBody, ResponseInterface $response, StreamInterface $stream, StreamFactoryInterface $streamFactory)
     {
         $httpBody = 'body';
 
@@ -343,7 +343,7 @@ class CachePluginSpec extends ObjectBehavior
         $this->handleRequest($request, $next, function () {});
     }
 
-    function it_serves_and_resaved_expired_response(CacheItemPoolInterface $pool, CacheItemInterface $item, RequestInterface $request, UriInterface $uri, StreamInterface $requestStream, ResponseInterface $response, StreamInterface $stream, StreamFactory $streamFactory)
+    function it_serves_and_resaved_expired_response(CacheItemPoolInterface $pool, CacheItemInterface $item, RequestInterface $request, UriInterface $uri, StreamInterface $requestStream, ResponseInterface $response, StreamInterface $stream, StreamFactoryInterface $streamFactory)
     {
         $httpBody = 'body';
 
@@ -398,7 +398,7 @@ class CachePluginSpec extends ObjectBehavior
         RequestInterface $request,
         UriInterface $uri,
         ResponseInterface $response,
-        StreamFactory $streamFactory,
+        StreamFactoryInterface $streamFactory,
         StreamInterface $stream
     ) {
         $this->beConstructedThrough('clientCache', [$pool, $streamFactory, [
@@ -452,7 +452,7 @@ class CachePluginSpec extends ObjectBehavior
         RequestInterface $request,
         UriInterface $uri,
         ResponseInterface $response,
-        StreamFactory $streamFactory,
+        StreamFactoryInterface $streamFactory,
         StreamInterface $stream
     ) {
         $this->beConstructedThrough('clientCache', [$pool, $streamFactory, [
@@ -498,7 +498,7 @@ class CachePluginSpec extends ObjectBehavior
         RequestInterface $request,
         UriInterface $uri,
         ResponseInterface $response,
-        StreamFactory $streamFactory,
+        StreamFactoryInterface $streamFactory,
         StreamInterface $stream
     ) {
         $this->beConstructedThrough('clientCache', [$pool, $streamFactory, [
@@ -550,7 +550,7 @@ class CachePluginSpec extends ObjectBehavior
     function it_can_be_initialized_with_custom_cache_key_generator(
         CacheItemPoolInterface $pool,
         CacheItemInterface $item,
-        StreamFactory $streamFactory,
+        StreamFactoryInterface $streamFactory,
         RequestInterface $request,
         UriInterface $uri,
         ResponseInterface $response,
