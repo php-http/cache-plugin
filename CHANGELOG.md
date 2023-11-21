@@ -2,6 +2,10 @@
 
 # Version 1
 
+## 1.8.1 - 2023-11-21
+
+- Allow installation with Symfony 7.
+
 ## 1.8.0 - 2023-04-28
 
 - Avoid PHP warning about serializing resources when serializing the response by detaching the stream.
