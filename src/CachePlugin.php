@@ -95,11 +95,7 @@ final class CachePlugin implements Plugin
     public static function clientCache(CacheItemPoolInterface $pool, StreamFactoryInterface $streamFactory, array $config = [])
     {
         // Allow caching of private requests
-        if (\array_key_exists('respect_response_cache_directives', $config)) {
-            $config['respect_response_cache_directives'][] = 'no-cache';
-            $config['respect_response_cache_directives'][] = 'max-age';
-            $config['respect_response_cache_directives'] = array_unique($config['respect_response_cache_directives']);
-        } else {
+        if (!\array_key_exists('respect_response_cache_directives', $config)) {
             $config['respect_response_cache_directives'] = ['no-cache', 'max-age'];
         }
 
