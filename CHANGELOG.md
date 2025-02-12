@@ -1,5 +1,12 @@
 # Change Log
 
+# Version 3
+
+## 3.0.0 - 2025-XX-XX
+
+### Changed
+ - `clientCache()` will no longer force no-cache & max-age directives to be respected even when `respect_response_cache_directives` is set.
+
 # Version 2
 
 ## 2.0.1 - 2024-10-02
