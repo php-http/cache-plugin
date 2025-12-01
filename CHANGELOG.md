@@ -2,6 +2,11 @@
 
 # Version 2
 
+## 2.0.2 - 2025-12-01
+
+- Support Symfony 8.
+- Test with PHP 8.5.
+
 ## 2.0.1 - 2024-10-02
 
 - Test with PHP 8.3 and 8.4.
