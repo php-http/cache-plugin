@@ -2,6 +2,12 @@
 
 # Version 2
 
+## 2.1.0 - TBD
+
+### Added
+
+- Added an `etag_only` option to cache only ETag-backed responses and always revalidate them before serving cached bodies.
+
 ## 2.0.2 - 2025-12-01
 
 - Support Symfony 8.

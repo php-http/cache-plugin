@@ -246,6 +246,19 @@ class CachePluginTest extends TestCase
         ];
     }
 
+    public function testEtagOnlyRequiresBoolean(): void
+    {
+        $this->expectException(InvalidOptionsException::class);
+
+        $this->createPlugin(
+            $this->createMock(CacheItemPoolInterface::class),
+            $this->createMock(StreamFactoryInterface::class),
+            [
+                'etag_only' => 'yes',
+            ]
+        );
+    }
+
     public function testCalculateAgeFromResponse(): void
     {
         $httpBody = 'body';
@@ -355,6 +368,259 @@ class CachePluginTest extends TestCase
         $pool->expects($this->once())->method('save')->with($item);
 
         $plugin = $this->createPlugin($pool, $streamFactory);
+
+        $result = $plugin->handleRequest($request, $this->createFulfilledNext($response), function () {
+        })->wait();
+
+        self::assertSame($response, $result);
+    }
+
+    public function testEtagOnlyDoesNotCacheResponseWithoutEtag(): void
+    {
+        $stream = $this->createMock(StreamInterface::class);
+        $stream->method('__toString')->willReturn('');
+
+        $streamFactory = $this->createMock(StreamFactoryInterface::class);
+        $streamFactory->expects($this->never())->method('createStream');
+
+        $uri = $this->createMock(UriInterface::class);
+        $uri->method('__toString')->willReturn('https://example.com/');
+
+        $request = $this->createMock(RequestInterface::class);
+        $request->method('getBody')->willReturn($stream);
+        $request->method('getMethod')->willReturn('GET');
+        $request->method('getUri')->willReturn($uri);
+
+        $response = $this->createMock(ResponseInterface::class);
+        $response->method('getStatusCode')->willReturn(200);
+        $response->method('getHeader')->willReturn([]);
+
+        $item = $this->createMock(CacheItemInterface::class);
+        $item->method('isHit')->willReturn(false);
+        $item->expects($this->never())->method('set');
+
+        $pool = $this->createMock(CacheItemPoolInterface::class);
+        $pool->expects($this->once())->method('getItem')->willReturn($item);
+        $pool->expects($this->never())->method('save');
+
+        $plugin = $this->createPlugin($pool, $streamFactory, [
+            'etag_only' => true,
+        ]);
+
+        $result = $plugin->handleRequest($request, $this->createFulfilledNext($response), function () {
+        })->wait();
+
+        self::assertSame($response, $result);
+    }
+
+    public function testEtagOnlyCachesResponseWithEtag(): void
+    {
+        $httpBody = 'body';
+
+        $stream = $this->createMock(StreamInterface::class);
+        $stream->method('__toString')->willReturn($httpBody);
+        $stream->method('isSeekable')->willReturn(true);
+        $stream->expects($this->once())->method('rewind');
+        $stream->expects($this->once())->method('detach');
+
+        $streamFactory = $this->createMock(StreamFactoryInterface::class);
+        $streamFactory->expects($this->once())->method('createStream')->with($httpBody)->willReturn($stream);
+
+        $uri = $this->createMock(UriInterface::class);
+        $uri->method('__toString')->willReturn('https://example.com/');
+
+        $request = $this->createMock(RequestInterface::class);
+        $request->method('getBody')->willReturn($stream);
+        $request->method('getMethod')->willReturn('GET');
+        $request->method('getUri')->willReturn($uri);
+
+        $response = $this->createMock(ResponseInterface::class);
+        $response->method('getStatusCode')->willReturn(200);
+        $response->method('getBody')->willReturn($stream);
+        $response->method('getHeader')->willReturnCallback(function ($header) {
+            if ('ETag' === $header) {
+                return ['foo_etag'];
+            }
+
+            return [];
+        });
+        $response->expects($this->once())->method('withBody')->with($stream)->willReturnSelf();
+
+        $item = $this->createMock(CacheItemInterface::class);
+        $item->method('isHit')->willReturn(false);
+        $item->expects($this->once())->method('expiresAfter')->with(1060)->willReturnSelf();
+        $item->expects($this->once())->method('set')->with($this->cacheItemConstraint([
+            'response' => $response,
+            'body' => $httpBody,
+            'expiresAt' => 0,
+            'createdAt' => 0,
+            'etag' => ['foo_etag'],
+        ]))->willReturnSelf();
+
+        $pool = $this->createMock(CacheItemPoolInterface::class);
+        $pool->expects($this->once())->method('getItem')->willReturn($item);
+        $pool->expects($this->once())->method('save')->with($item);
+
+        $plugin = $this->createPlugin($pool, $streamFactory, [
+            'etag_only' => true,
+        ]);
+
+        $result = $plugin->handleRequest($request, $this->createFulfilledNext($response), function () {
+        })->wait();
+
+        self::assertSame($response, $result);
+    }
+
+    public function testEtagOnlyAlwaysRevalidatesCachedResponse(): void
+    {
+        $stream = $this->createMock(StreamInterface::class);
+        $stream->method('__toString')->willReturn('');
+
+        $streamFactory = $this->createMock(StreamFactoryInterface::class);
+        $streamFactory->expects($this->never())->method('createStream');
+
+        $uri = $this->createMock(UriInterface::class);
+        $uri->method('__toString')->willReturn('https://example.com/');
+
+        $request = $this->createMock(RequestInterface::class);
+        $request->method('getMethod')->willReturn('GET');
+        $request->method('getUri')->willReturn($uri);
+        $request->method('getBody')->willReturn($stream);
+        $request->expects($this->once())->method('withHeader')->with('If-None-Match', 'foo_etag')->willReturnSelf();
+
+        $response = $this->createMock(ResponseInterface::class);
+        $response->method('getStatusCode')->willReturn(200);
+        $response->method('getHeader')->willReturn([]);
+
+        $cachedResponse = $this->createMock(ResponseInterface::class);
+
+        $item = $this->createMock(CacheItemInterface::class);
+        $item->method('isHit')->willReturn(true);
+        $item->method('get')->willReturn([
+            'response' => $cachedResponse,
+            'body' => 'cached',
+            'expiresAt' => time() + 1000000,
+            'createdAt' => 4711,
+            'etag' => ['foo_etag'],
+        ]);
+        $item->expects($this->never())->method('set');
+
+        $pool = $this->createMock(CacheItemPoolInterface::class);
+        $pool->expects($this->once())->method('getItem')->willReturn($item);
+        $pool->expects($this->never())->method('save');
+
+        $plugin = $this->createPlugin($pool, $streamFactory, [
+            'etag_only' => true,
+        ]);
+
+        $result = $plugin->handleRequest($request, $this->createFulfilledNext($response), function () {
+        })->wait();
+
+        self::assertSame($response, $result);
+    }
+
+    public function testEtagOnlyServesCachedResponseAfterNotModified(): void
+    {
+        $httpBody = 'body';
+
+        $requestBody = $this->createMock(StreamInterface::class);
+        $requestBody->method('__toString')->willReturn('');
+
+        $cachedBody = $this->createMock(StreamInterface::class);
+        $cachedBody->expects($this->once())->method('rewind');
+
+        $streamFactory = $this->createMock(StreamFactoryInterface::class);
+        $streamFactory->expects($this->once())->method('createStream')->with($httpBody)->willReturn($cachedBody);
+
+        $uri = $this->createMock(UriInterface::class);
+        $uri->method('__toString')->willReturn('https://example.com/');
+
+        $request = $this->createMock(RequestInterface::class);
+        $request->method('getMethod')->willReturn('GET');
+        $request->method('getUri')->willReturn($uri);
+        $request->method('getBody')->willReturn($requestBody);
+        $request->expects($this->once())->method('withHeader')->with('If-None-Match', 'foo_etag')->willReturnSelf();
+
+        $notModifiedResponse = $this->createMock(ResponseInterface::class);
+        $notModifiedResponse->method('getStatusCode')->willReturn(304);
+        $notModifiedResponse->method('getHeader')->willReturn([]);
+
+        $cachedResponse = $this->createMock(ResponseInterface::class);
+        $cachedResponse->expects($this->once())->method('withBody')->with($cachedBody)->willReturnSelf();
+
+        $item = $this->createMock(CacheItemInterface::class);
+        $item->method('isHit')->willReturn(true);
+        $item->method('get')->willReturn([
+            'response' => $cachedResponse,
+            'body' => $httpBody,
+            'expiresAt' => 0,
+            'createdAt' => 4711,
+            'etag' => ['foo_etag'],
+        ]);
+        $item->expects($this->once())->method('expiresAfter')->with(1060)->willReturnSelf();
+        $item->expects($this->once())->method('set')->with($this->cacheItemConstraint([
+            'response' => $cachedResponse,
+            'body' => $httpBody,
+            'expiresAt' => 0,
+            'createdAt' => 0,
+            'etag' => ['foo_etag'],
+        ]))->willReturnSelf();
+
+        $pool = $this->createMock(CacheItemPoolInterface::class);
+        $pool->expects($this->once())->method('getItem')->willReturn($item);
+        $pool->expects($this->once())->method('save')->with($item);
+
+        $plugin = $this->createPlugin($pool, $streamFactory, [
+            'etag_only' => true,
+        ]);
+
+        $result = $plugin->handleRequest($request, $this->createFulfilledNext($notModifiedResponse), function () {
+        })->wait();
+
+        self::assertSame($cachedResponse, $result);
+    }
+
+    public function testEtagOnlyIgnoresCachedResponseWithoutEtag(): void
+    {
+        $stream = $this->createMock(StreamInterface::class);
+        $stream->method('__toString')->willReturn('');
+
+        $streamFactory = $this->createMock(StreamFactoryInterface::class);
+        $streamFactory->expects($this->never())->method('createStream');
+
+        $uri = $this->createMock(UriInterface::class);
+        $uri->method('__toString')->willReturn('https://example.com/');
+
+        $request = $this->createMock(RequestInterface::class);
+        $request->method('getMethod')->willReturn('GET');
+        $request->method('getUri')->willReturn($uri);
+        $request->method('getBody')->willReturn($stream);
+        $request->expects($this->never())->method('withHeader');
+
+        $response = $this->createMock(ResponseInterface::class);
+        $response->method('getStatusCode')->willReturn(200);
+        $response->method('getHeader')->willReturn([]);
+
+        $cachedResponse = $this->createMock(ResponseInterface::class);
+
+        $item = $this->createMock(CacheItemInterface::class);
+        $item->method('isHit')->willReturn(true);
+        $item->method('get')->willReturn([
+            'response' => $cachedResponse,
+            'body' => 'cached',
+            'expiresAt' => time() + 1000000,
+            'createdAt' => 4711,
+            'etag' => [],
+        ]);
+        $item->expects($this->never())->method('set');
+
+        $pool = $this->createMock(CacheItemPoolInterface::class);
+        $pool->expects($this->once())->method('getItem')->willReturn($item);
+        $pool->expects($this->never())->method('save');
+
+        $plugin = $this->createPlugin($pool, $streamFactory, [
+            'etag_only' => true,
+        ]);
 
         $result = $plugin->handleRequest($request, $this->createFulfilledNext($response), function () {
         })->wait();

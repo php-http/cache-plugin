@@ -54,6 +54,7 @@ final class CachePlugin implements Plugin
      *
      *     bool respect_cache_headers: Whether to look at the cache directives or ignore them
      *     int default_ttl: (seconds) If we do not respect cache headers or can't calculate a good ttl, use this value
+     *     bool etag_only: Only cache responses with ETag headers and always revalidate them with If-None-Match
      *     string hash_algo: The hashing algorithm to use when generating cache keys
      *     int|null cache_lifetime: (seconds) To support serving a previous stale response when the server answers 304
      *              we have to store the cache for a longer time than the server originally says it is valid for.
@@ -143,29 +144,35 @@ final class CachePlugin implements Plugin
         if ($cacheItem->isHit()) {
             $data = $cacheItem->get();
             if (is_array($data)) {
-                // The array_key_exists() is to be removed in 2.0.
-                if (array_key_exists('expiresAt', $data) && (null === $data['expiresAt'] || time() < $data['expiresAt'])) {
-                    // This item is still valid according to previous cache headers
-                    $response = $this->createResponseFromCacheItem($cacheItem);
-                    $response = $this->handleCacheListeners($request, $response, true, $cacheItem);
+                if ($this->config['etag_only']) {
+                    if ($etag = $this->getETag($cacheItem)) {
+                        $request = $request->withHeader('If-None-Match', $etag);
+                    }
+                } else {
+                    // The array_key_exists() is to be removed in 2.0.
+                    if (array_key_exists('expiresAt', $data) && (null === $data['expiresAt'] || time() < $data['expiresAt'])) {
+                        // This item is still valid according to previous cache headers
+                        $response = $this->createResponseFromCacheItem($cacheItem);
+                        $response = $this->handleCacheListeners($request, $response, true, $cacheItem);
 
-                    return new FulfilledPromise($response);
-                }
+                        return new FulfilledPromise($response);
+                    }
 
-                // Add headers to ask the server if this cache is still valid
-                if ($modifiedSinceValue = $this->getModifiedSinceHeaderValue($cacheItem)) {
-                    $request = $request->withHeader('If-Modified-Since', $modifiedSinceValue);
-                }
+                    // Add headers to ask the server if this cache is still valid
+                    if ($modifiedSinceValue = $this->getModifiedSinceHeaderValue($cacheItem)) {
+                        $request = $request->withHeader('If-Modified-Since', $modifiedSinceValue);
+                    }
 
-                if ($etag = $this->getETag($cacheItem)) {
-                    $request = $request->withHeader('If-None-Match', $etag);
+                    if ($etag = $this->getETag($cacheItem)) {
+                        $request = $request->withHeader('If-None-Match', $etag);
+                    }
                 }
             }
         }
 
         return $next($request)->then(function (ResponseInterface $response) use ($request, $cacheItem) {
             if (304 === $response->getStatusCode()) {
-                if (!$cacheItem->isHit()) {
+                if (!$cacheItem->isHit() || ($this->config['etag_only'] && !$this->getETag($cacheItem))) {
                     /*
                      * We do not have the item in cache. This plugin did not add If-Modified-Since
                      * or If-None-Match headers. Return the response from server.
@@ -239,6 +246,10 @@ final class CachePlugin implements Plugin
      */
     private function calculateResponseExpiresAt(?int $maxAge): ?int
     {
+        if ($this->config['etag_only']) {
+            return 0;
+        }
+
         if (null === $maxAge) {
             return null;
         }
@@ -254,6 +265,10 @@ final class CachePlugin implements Plugin
     protected function isCacheable(ResponseInterface $response)
     {
         if (!in_array($response->getStatusCode(), [200, 203, 300, 301, 302, 404, 410])) {
+            return false;
+        }
+
+        if ($this->config['etag_only'] && !$this->responseHasETag($response)) {
             return false;
         }
 
@@ -352,6 +367,7 @@ final class CachePlugin implements Plugin
         $resolver->setDefaults([
             'cache_lifetime' => 86400 * 30, // 30 days
             'default_ttl' => 0,
+            'etag_only' => false,
             // Deprecated as of v1.3, to be removed in v2.0. Use respect_response_cache_directives instead
             'respect_cache_headers' => null,
             'hash_algo' => 'sha1',
@@ -364,6 +380,7 @@ final class CachePlugin implements Plugin
 
         $resolver->setAllowedTypes('cache_lifetime', ['int', 'null']);
         $resolver->setAllowedTypes('default_ttl', ['int', 'null']);
+        $resolver->setAllowedTypes('etag_only', 'bool');
         $resolver->setAllowedTypes('respect_cache_headers', ['bool', 'null']);
         $resolver->setAllowedTypes('methods', 'array');
         $resolver->setAllowedTypes('cache_key_generator', ['null', CacheKeyGenerator::class]);
@@ -409,6 +426,17 @@ final class CachePlugin implements Plugin
         }
 
         return $response->withBody($stream);
+    }
+
+    private function responseHasETag(ResponseInterface $response): bool
+    {
+        foreach ($response->getHeader('ETag') as $etag) {
+            if ('' !== trim($etag)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
