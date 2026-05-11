@@ -72,7 +72,7 @@ abstract class AbstractCachePlugin implements Plugin
         }
 
         $optionsResolver = new OptionsResolver();
-        $this->configureOptions($optionsResolver);
+        self::configureOptions($optionsResolver);
         $this->config = $optionsResolver->resolve($config);
 
         if (null === $this->config['cache_key_generator']) {
@@ -123,7 +123,7 @@ abstract class AbstractCachePlugin implements Plugin
         if ($cacheItem->isHit()) {
             $data = $cacheItem->get();
             if (is_array($data)) {
-                if ($this->shouldUseCachedResponse($data)) {
+                if (static::shouldUseCachedResponse($data)) {
                     // This item is still valid according to previous cache headers
                     $response = $this->createResponseFromCacheItem($cacheItem);
                     $response = $this->handleCacheListeners($request, $response, true, $cacheItem);
@@ -131,13 +131,13 @@ abstract class AbstractCachePlugin implements Plugin
                     return new FulfilledPromise($response);
                 }
 
-                $request = $this->withCacheValidationHeaders($request, $cacheItem);
+                $request = static::withCacheValidationHeaders($request, $cacheItem);
             }
         }
 
         return $next($request)->then(function (ResponseInterface $response) use ($request, $cacheItem) {
             if (304 === $response->getStatusCode()) {
-                if (!$this->canUseCacheItemForNotModifiedResponse($cacheItem)) {
+                if (!static::canUseCacheItemForNotModifiedResponse($cacheItem)) {
                     /*
                      * We do not have the item in cache. This plugin did not add If-Modified-Since
                      * or If-None-Match headers. Return the response from server.
@@ -148,7 +148,7 @@ abstract class AbstractCachePlugin implements Plugin
                 // The cached response we have is still valid
                 $data = $cacheItem->get();
                 $maxAge = $this->getMaxAge($response);
-                $data['expiresAt'] = $this->calculateResponseExpiresAt($maxAge);
+                $data['expiresAt'] = static::calculateResponseExpiresAt($maxAge);
                 $cacheItem->set($data)->expiresAfter($this->calculateCacheItemExpiresAfter($maxAge));
                 $this->pool->save($cacheItem);
 
@@ -170,7 +170,7 @@ abstract class AbstractCachePlugin implements Plugin
                     ->set([
                         'response' => $response,
                         'body' => $body,
-                        'expiresAt' => $this->calculateResponseExpiresAt($maxAge),
+                        'expiresAt' => static::calculateResponseExpiresAt($maxAge),
                         'createdAt' => time(),
                         'etag' => $response->getHeader('ETag'),
                     ]);
@@ -209,7 +209,7 @@ abstract class AbstractCachePlugin implements Plugin
      *
      * @return int|null Unix system time. A null value means that the response expires when the cache item expires
      */
-    protected function calculateResponseExpiresAt(?int $maxAge)
+    protected static function calculateResponseExpiresAt(?int $maxAge)
     {
         if (null === $maxAge) {
             return null;
@@ -231,7 +231,7 @@ abstract class AbstractCachePlugin implements Plugin
 
         $nocacheDirectives = array_intersect($this->config['respect_response_cache_directives'], $this->noCacheFlags);
         foreach ($nocacheDirectives as $nocacheDirective) {
-            if ($this->getCacheControlDirective($response, $nocacheDirective)) {
+            if (self::getCacheControlDirective($response, $nocacheDirective)) {
                 return false;
             }
         }
@@ -261,7 +261,7 @@ abstract class AbstractCachePlugin implements Plugin
      *
      * @return bool|string The value of the directive, true if directive without value, false if directive not present
      */
-    private function getCacheControlDirective(ResponseInterface $response, string $name)
+    private static function getCacheControlDirective(ResponseInterface $response, string $name)
     {
         $headers = $response->getHeader('Cache-Control');
         foreach ($headers as $header) {
@@ -297,7 +297,7 @@ abstract class AbstractCachePlugin implements Plugin
         }
 
         // check for max age in the Cache-Control header
-        $maxAge = $this->getCacheControlDirective($response, 'max-age');
+        $maxAge = self::getCacheControlDirective($response, 'max-age');
         if (!is_bool($maxAge)) {
             $ageHeaders = $response->getHeader('Age');
             foreach ($ageHeaders as $age) {
@@ -319,7 +319,7 @@ abstract class AbstractCachePlugin implements Plugin
     /**
      * Configure an options resolver.
      */
-    private function configureOptions(OptionsResolver $resolver): void
+    private static function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
             'cache_lifetime' => 86400 * 30, // 30 days
@@ -351,7 +351,7 @@ abstract class AbstractCachePlugin implements Plugin
 
         $resolver->setNormalizer('respect_cache_headers', function (Options $options, $value) {
             if (null !== $value) {
-                @trigger_error('The option "respect_cache_headers" is deprecated since version 1.3 and will be removed in 2.0. Use "respect_response_cache_directives" instead.', E_USER_DEPRECATED);
+                @trigger_error('The option "respect_cache_headers" is deprecated since version 1.3 and will be removed in 3.0. Use "respect_response_cache_directives" instead.', E_USER_DEPRECATED);
             }
 
             return null === $value ? true : $value;
@@ -383,7 +383,7 @@ abstract class AbstractCachePlugin implements Plugin
         return $response->withBody($stream);
     }
 
-    protected function responseHasETag(ResponseInterface $response): bool
+    protected static function responseHasETag(ResponseInterface $response): bool
     {
         foreach ($response->getHeader('ETag') as $etag) {
             if ('' !== trim($etag)) {
@@ -397,10 +397,10 @@ abstract class AbstractCachePlugin implements Plugin
     /**
      * Get the value for the "If-Modified-Since" header.
      */
-    private function getModifiedSinceHeaderValue(CacheItemInterface $cacheItem): ?string
+    private static function getModifiedSinceHeaderValue(CacheItemInterface $cacheItem): ?string
     {
         $data = $cacheItem->get();
-        // The isset() is to be removed in 2.0.
+        // The isset() is to be removed in 3.0.
         if (!isset($data['createdAt'])) {
             return null;
         }
@@ -414,10 +414,10 @@ abstract class AbstractCachePlugin implements Plugin
     /**
      * Get the ETag from the cached response.
      */
-    protected function getETag(CacheItemInterface $cacheItem): ?string
+    protected static function getETag(CacheItemInterface $cacheItem): ?string
     {
         $data = $cacheItem->get();
-        // The isset() is to be removed in 2.0.
+        // The isset() is to be removed in 3.0.
         if (!isset($data['etag'])) {
             return null;
         }
@@ -446,27 +446,27 @@ abstract class AbstractCachePlugin implements Plugin
     /**
      * @param mixed[] $data
      */
-    protected function shouldUseCachedResponse(array $data): bool
+    protected static function shouldUseCachedResponse(array $data): bool
     {
-        // The array_key_exists() is to be removed in 2.0.
+        // The array_key_exists() is to be removed in 3.0.
         return array_key_exists('expiresAt', $data) && (null === $data['expiresAt'] || time() < $data['expiresAt']);
     }
 
-    protected function withCacheValidationHeaders(RequestInterface $request, CacheItemInterface $cacheItem): RequestInterface
+    protected static function withCacheValidationHeaders(RequestInterface $request, CacheItemInterface $cacheItem): RequestInterface
     {
         // Add headers to ask the server if this cache is still valid
-        if ($modifiedSinceValue = $this->getModifiedSinceHeaderValue($cacheItem)) {
+        if ($modifiedSinceValue = self::getModifiedSinceHeaderValue($cacheItem)) {
             $request = $request->withHeader('If-Modified-Since', $modifiedSinceValue);
         }
 
-        if ($etag = $this->getETag($cacheItem)) {
+        if ($etag = static::getETag($cacheItem)) {
             $request = $request->withHeader('If-None-Match', $etag);
         }
 
         return $request;
     }
 
-    protected function canUseCacheItemForNotModifiedResponse(CacheItemInterface $cacheItem): bool
+    protected static function canUseCacheItemForNotModifiedResponse(CacheItemInterface $cacheItem): bool
     {
         return $cacheItem->isHit();
     }

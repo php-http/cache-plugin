@@ -44,35 +44,35 @@ final class EtagCachePlugin extends AbstractCachePlugin
     /**
      * @return int
      */
-    protected function calculateResponseExpiresAt(?int $maxAge)
+    protected static function calculateResponseExpiresAt(?int $maxAge)
     {
         return 0;
     }
 
     protected function isCacheable(ResponseInterface $response)
     {
-        return parent::isCacheable($response) && $this->responseHasETag($response);
+        return parent::isCacheable($response) && self::responseHasETag($response);
     }
 
     /**
      * @param mixed[] $data
      */
-    protected function shouldUseCachedResponse(array $data): bool
+    protected static function shouldUseCachedResponse(array $data): bool
     {
         return false;
     }
 
-    protected function withCacheValidationHeaders(RequestInterface $request, CacheItemInterface $cacheItem): RequestInterface
+    protected static function withCacheValidationHeaders(RequestInterface $request, CacheItemInterface $cacheItem): RequestInterface
     {
-        if ($etag = $this->getETag($cacheItem)) {
+        if ($etag = self::getETag($cacheItem)) {
             $request = $request->withHeader('If-None-Match', $etag);
         }
 
         return $request;
     }
 
-    protected function canUseCacheItemForNotModifiedResponse(CacheItemInterface $cacheItem): bool
+    protected static function canUseCacheItemForNotModifiedResponse(CacheItemInterface $cacheItem): bool
     {
-        return $cacheItem->isHit() && null !== $this->getETag($cacheItem);
+        return $cacheItem->isHit() && null !== self::getETag($cacheItem);
     }
 }
