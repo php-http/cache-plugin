@@ -6,7 +6,7 @@
 
 ### Added
 
-- Added an `etag_only` option to cache only ETag-backed responses and always revalidate them before serving cached bodies.
+- Added `EtagCachePlugin` to cache only ETag-backed responses and always revalidate them before serving cached bodies.
 
 ## 2.0.2 - 2025-12-01
 
