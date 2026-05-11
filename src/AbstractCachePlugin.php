@@ -209,7 +209,7 @@ abstract class AbstractCachePlugin implements Plugin
      *
      * @return int|null Unix system time. A null value means that the response expires when the cache item expires
      */
-    protected function calculateResponseExpiresAt(?int $maxAge): ?int
+    protected function calculateResponseExpiresAt(?int $maxAge)
     {
         if (null === $maxAge) {
             return null;

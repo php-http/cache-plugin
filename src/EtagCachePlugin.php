@@ -41,7 +41,7 @@ final class EtagCachePlugin extends AbstractCachePlugin
         return new self($pool, $streamFactory, $config);
     }
 
-    protected function calculateResponseExpiresAt(?int $maxAge): ?int
+    protected function calculateResponseExpiresAt(?int $maxAge)
     {
         return 0;
     }
