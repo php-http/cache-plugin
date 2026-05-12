@@ -23,14 +23,6 @@ composer require php-http/cache-plugin
 
 Please see the [official documentation](http://docs.php-http.org/en/latest/plugins/cache.html).
 
-To only cache ETag-backed responses and always revalidate cached bodies with `If-None-Match`, use `EtagCachePlugin`:
-
-``` php
-$plugin = EtagCachePlugin::clientCache($pool, $streamFactory);
-```
-
-Responses without an `ETag` header are not cached. Cached responses are only returned after the origin replies with `304 Not Modified`.
-
 
 ## Testing
 
